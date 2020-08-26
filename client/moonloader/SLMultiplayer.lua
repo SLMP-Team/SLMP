@@ -6,6 +6,7 @@ dofile(mpFolder .. "\\SLGraphics.lua") -- SL:MP GUI and HUD File
 dofile(mpFolder .. "\\SLGame.lua") -- SL:MP GTA:SA Patches & Fixes
 dofile(mpFolder .. "\\SLNetwork.lua") -- SL:MP Network File
 dofile(mpFolder .. "\\SLPackets.lua") -- SL:MP Packets Proccessing File
+dofile(mpFolder .. "\\SLRPC.lua") -- SL:MP RPC Proccessing File
 
 local gMenuPatch = true
 if memory.getuint8(0xC8D4C0, false) ~= 9 then
@@ -59,6 +60,7 @@ function main()
   pcall(CGame.disableAllFuckingCity)
   CGame.workInPause()
   memory.write(0x72C1B7, 0xEB, 1, true) -- anti HazeEffect
+  CGame.disableParkedCars()
 
   GPool.clearPool()
   LPlayer.updateStats()
@@ -74,32 +76,82 @@ function gameLoop()
     CGame.disableCharacters()
     pcall(memory.setfloat, 0x8A5B20, 0.0, true) -- disable vehicles
     renderFontDrawText(renderVerdana, CGame.cVersion, 5, CGame.cScreen.y - 16, 0x80FFFFFF)
+    checkPlayerState() -- checking player state
 
-    -- Send OnFoot Sync
     if LPlayer.lpGameState == S_GAMESTATES.GS_CONNECTED then
-      if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.05 and not isGamePaused() then
-        local x, y, z = getCharCoordinates(PLAYER_PED)
-        if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2] or z ~= LPlayer.lpPosition[3] or os.clock() - ltSendOnFootSync >= 0.5 then
-          ltSendOnFootSync = os.clock()
-          LPlayer.updateStats()
-          local vecX, vecY, vecZ = getCharVelocity(PLAYER_PED)
-          SPool.sendPacket(S_PACKETS.ONFOOT_SYNC, {
-            position = LPlayer.lpPosition,
-            quaternion = LPlayer.lpQuaternion,
-            facingAngle = LPlayer.lpFacingAngle,
-            velocity = {vecX, vecY, vecZ},
-            health = LPlayer.lpHealth,
-            armour = LPlayer.lpArmour,
-            keys = {
-              leftRight = getPadState(PLAYER_HANDLE, 0), forwardBackward = getPadState(PLAYER_HANDLE, 1),
-              jump = getPadState(PLAYER_HANDLE, 14), sprint = getPadState(PLAYER_HANDLE, 16),
-              crouch = getPadState(PLAYER_HANDLE, 18), walk = getPadState(PLAYER_HANDLE, 22)
-            }
-          })
+      if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_ONFOOT then
+
+        -- Send OnFoot Sync
+        if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.05 and not isGamePaused() then
+          local x, y, z = getCharCoordinates(PLAYER_PED)
+          if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2] or z ~= LPlayer.lpPosition[3] or os.clock() - ltSendOnFootSync >= 0.5 then
+            ltSendOnFootSync = os.clock()
+            LPlayer.updateStats()
+            local vecX, vecY, vecZ = getCharVelocity(PLAYER_PED)
+            SPool.sendPacket(S_PACKETS.ONFOOT_SYNC, {
+              position = LPlayer.lpPosition,
+              quaternion = LPlayer.lpQuaternion,
+              facingAngle = LPlayer.lpFacingAngle,
+              velocity = {vecX, vecY, vecZ},
+              health = LPlayer.lpHealth,
+              armour = LPlayer.lpArmour,
+              keys = {
+                leftRight = getPadState(PLAYER_HANDLE, 0), forwardBackward = getPadState(PLAYER_HANDLE, 1),
+                jump = getPadState(PLAYER_HANDLE, 14), sprint = getPadState(PLAYER_HANDLE, 16),
+                crouch = getPadState(PLAYER_HANDLE, 18), walk = getPadState(PLAYER_HANDLE, 22)
+              }
+            })
+          end
         end
+        -- Send OnFoot Sync
+
+      elseif LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER or LPlayer.lpPlayerState == S_PLAYERSTATE.PS_PASSANGER then
+
+        -- Send InCar Sync
+        if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.05 and not isGamePaused() then
+          local car, slot = storeCarCharIsInNoSave(PLAYER_PED), 0
+          for i = 1, #GPool.GVehicles do
+            if GPool.GVehicles[i].handle and GPool.GVehicles[i].handle == car then
+              slot = i
+              break
+            end
+          end
+          if slot ~= 0 then
+            car = GPool.GVehicles[slot]
+            local x, y, z = getCharCoordinates(PLAYER_PED)
+            if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2] or z ~= LPlayer.lpPosition[3] or os.clock() - ltSendOnFootSync >= 0.5 then
+              x, y, z = getCarCoordinates(GPool.GVehicles[slot].handle)
+              ltSendOnFootSync = os.clock()
+              if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER then
+                local qX, qY, qZ, qW = getVehicleQuaternion(GPool.GVehicles[slot].handle)
+                local facingAngle = getCarHeading(GPool.GVehicles[slot].handle)
+                local vecX, vecY, vecZ = getCarSpeedVector(GPool.GVehicles[slot].handle)
+                local vHealth = getCarHealth(GPool.GVehicles[slot].handle)
+                local vRoll = getCarRoll(GPool.GVehicles[slot].handle)
+                SPool.sendPacket(S_PACKETS.INCAR_SYNC, {
+                  position = {x, y, z},
+                  quaternion = {qX, qY, qZ, qW},
+                  facingAngle = facingAngle,
+                  velocity = {vecX, vecY, vecZ},
+                  vehicleid = LPlayer.lpVehicleID,
+                  seatID = LPlayer.lpVehicleSeat,
+                  health = vHealth, roll = vRoll
+                })
+              else 
+                SPool.sendPacket(S_PACKETS.INCAR_SYNC, {
+                  position = {x, y, z}, 
+                  vehicleid = LPlayer.lpVehicleID,
+                  seatID = LPlayer.lpVehicleSeat
+                }) 
+              end
+            end
+          end
+        end
+        -- SendInCar Sync
+
       end
     end
-    -- Send OnFoot Sync
+    
 
     local pX, pY, pZ = getCharCoordinates(PLAYER_PED)
     for i = 1, #GPool.GPlayers do
@@ -136,6 +188,11 @@ function onScriptTerminate(script, quitGame)
       for i = #GPool.GPlayers, 1, -1 do
         if GPool.GPlayers[i].handle and doesCharExist(GPool.GPlayers[i].handle) then
           deleteChar(GPool.GPlayers[i].handle)
+        end
+      end
+      for i = #GPool.GVehicles, 1, -1 do
+        if GPool.GVehicles[i].handle and doesVehicleExist(GPool.GVehicles[i].handle) then
+          deleteCar(GPool.GVehicles[i].handle)
         end
       end
     end

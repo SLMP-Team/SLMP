@@ -15,6 +15,8 @@ udp = socket.udp()
 renderArial = renderCreateFont('Arial', 12)
 renderVerdana = renderCreateFont('Verdana', 8)
 
+ltSendOnFootSync = os.clock()
+
 appdataFolder = getFolderPath(0x1C)
 configFolder = appdataFolder..'\\SLTEAM\\SLMP'
 if not doesDirectoryExist(configFolder) then
@@ -44,6 +46,13 @@ S_GAMESTATES =
   GS_CONNECTED = 2
 }
 
+S_PLAYERSTATE =
+{
+  PS_ONFOOT = 0,
+  PS_DRIVER = 1,
+  PS_PASSANGER = 2
+}
+
 LPlayer =
 {
   lpPlayerId = 0,
@@ -53,7 +62,9 @@ LPlayer =
   lpFacingAngle = 0.0,
   lpPosition = {0.0, 0.0, 0.0},
   lpQuaternion = {0.0, 0.0, 0.0, 0.0},
-  lpGameState = S_GAMESTATES.GS_DISCONNECTED
+  lpGameState = S_GAMESTATES.GS_DISCONNECTED,
+  lpPlayerState = S_PLAYERSTATE.PS_ONFOOT,
+  lpVehicleID = 0, lpVehicleSeat = 0
 }
 
 LPlayer.updateStats = function()
@@ -118,6 +129,33 @@ CConfig =
   servers = {}
 }
 
-function getDistBetweenPoints(x1, y1, z1, x2, y2, z2)
-  return math.sqrt((x2 - x1)^2 + (y2 - y1)^2 + (z2 - z1)^2)
+function checkPlayerState()
+  if isCharInAnyCar(PLAYER_PED) then
+    for i = 1, #GPool.GVehicles do
+      local car = storeCarCharIsInNoSave(PLAYER_PED)
+      if GPool.GVehicles[i].handle and GPool.GVehicles[i].handle == car then
+        local carSeat = CGame.getVehicleSeat()
+        if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_ONFOOT then
+          SPool.sendPacket(S_RPC.ENTER_VEHICLE, {
+            vehicleid = GPool.GVehicles[i].vehicleid,
+            seatID = tonumber(carSeat)
+          })
+        end
+        if carSeat and carSeat == 0 then 
+          LPlayer.lpPlayerState = S_PLAYERSTATE.PS_DRIVER
+        else LPlayer.lpPlayerState = S_PLAYERSTATE.PS_PASSANGER end
+        LPlayer.lpVehicleID = GPool.GVehicles[i].vehicleid
+        LPlayer.lpVehicleSeat = tonumber(carSeat)
+      end
+    end
+  else 
+    if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER 
+    or LPlayer.lpPlayerState == S_PLAYERSTATE.PS_PASSANGER then
+      SPool.sendPacket(S_RPC.EXIT_VEHICLE, {
+        vehicleid = LPlayer.lpVehicleID,
+        seatID = LPlayer.lpVehicleSeat
+      })
+    end
+    LPlayer.lpPlayerState = S_PLAYERSTATE.PS_ONFOOT 
+  end
 end

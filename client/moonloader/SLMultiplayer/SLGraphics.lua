@@ -81,7 +81,9 @@ function(self)
         if LPlayer.lpGameState == S_GAMESTATES.GS_CONNECTED then
           if ffi.string(CGraphics.ChatSettings.tChatInput):match('^/.+') then
             local str = ffi.string(CGraphics.ChatSettings.tChatInput):match('^/(.+)')
-            SPool.sendRPC(S_RPC.SEND_COMMAND, {command = u8:decode(str)})
+            if not CGraphics.commandsHook(str) then
+              SPool.sendRPC(S_RPC.SEND_COMMAND, {command = u8:decode(str)})
+            end
           else
             SPool.sendRPC(S_RPC.SEND_MESSAGE, {message = u8:decode(ffi.string(CGraphics.ChatSettings.tChatInput))})
           end
@@ -410,4 +412,18 @@ CGraphics.TextColoredRGB = function(text)
   end
 
   render_text(text)
+end
+
+function CGraphics.commandsHook(command)
+  if command == 'save' then
+    local file = io.open('savedPosition.txt', 'w+')
+    if file then
+      local x, y, z = getCharCoordinates(PLAYER_PED)
+      file:write(tostring(x .. ', ' .. y .. ', ' .. z))
+      file:close()
+    end
+    CGraphics.addMessage('Position saved!', 0xFFFFFFFF)
+    return true
+  end
+  return false
 end

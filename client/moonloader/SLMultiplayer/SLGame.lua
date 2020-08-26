@@ -82,3 +82,15 @@ CGame.workInPause = function()
   memory.fill(5499528, 144, 6)
   memory.fill(0x748063, 0x90, 5, true)
 end
+CGame.getVehicleSeat = function()
+  local car = storeCarCharIsInNoSave(PLAYER_PED)
+  for i = 0, getMaximumNumberOfPassengers(car) - 1 do
+    if not isCarPassengerSeatFree(car, i) and getCharInCarPassengerSeat(car, i) == PLAYER_PED then
+      return i
+    end
+  end
+  return 0
+end
+CGame.disableParkedCars = function()
+  memory.write(0x9690A0, 0, 4, true)
+end

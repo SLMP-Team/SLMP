@@ -5,7 +5,9 @@ S_PACKETS =
   DISCONNECT = 2,
   ONFOOT_SYNC = 3,
   CONNECTION_FAIL = 4,
-  CONNECTION_SUCCESS = 5
+  CONNECTION_SUCCESS = 5,
+  INCAR_SYNC = 6,
+  VEHICLES_SYNC = 7
 }
 
 S_RPC =
@@ -17,7 +19,11 @@ S_RPC =
   SET_PLAYER_POS = 4,
   PING_BACK = 5,
   SEND_MESSAGE = 6,
-  SEND_COMMAND = 7
+  SEND_COMMAND = 7,
+  CREATE_VEHICLE = 8,
+  DESTROY_VEHICLE = 9,
+  ENTER_VEHICLE = 10,
+  EXIT_VEHICLE = 11
 }
 
 SPool =
@@ -103,8 +109,11 @@ SPool.onPacketReceive = function(pID, pData)
     pcall(Packet_Connection_Success, pData)
   elseif pID == S_PACKETS.ONFOOT_SYNC then
     pcall(Packet_OnFoot, pData)
+  elseif pID == S_PACKETS.INCAR_SYNC then
+    pcall(Packet_InCar, pData)
+  elseif pID == S_PACKETS.VEHICLES_SYNC then
+    Packet_VehicleSync(pData)
   elseif pID == S_PACKETS.SERVER_INFO then
-    print('get')
     if clUpdatingInfo then
       clUpdatingInfo = false
       LPlayer.lpGameState = S_GAMESTATES.GS_DISCONNECTED
@@ -137,7 +146,8 @@ SPool.onRPCReceive = function(pID, pData)
       playerid = pData.playerid,
       nickname = pData.nickname,
       position = {0.0, 0.0, 0.0},
-      health = 100.0, armour = 0.0
+      health = 100.0, armour = 0.0,
+      inCar = 0
     }
   elseif pID == S_RPC.PLAYER_LEAVE then
     for i = #GPool.GPlayers, 1, -1 do
@@ -150,6 +160,11 @@ SPool.onRPCReceive = function(pID, pData)
     end
   elseif pID == S_RPC.SEND_MESSAGE then
     CGraphics.addMessage(pData.message, pData.color)
+  elseif pID == S_RPC.CREATE_VEHICLE then
+    print('RPC create')
+    pcall(RPC_CreateVehicle, pData)
+  elseif pID == S_RPC.DESTROY_VEHICLE then
+    pcall(RPC_DestroyVehicle, pData)
   end
 end
 
