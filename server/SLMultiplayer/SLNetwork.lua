@@ -5,7 +5,9 @@ S_PACKETS =
   DISCONNECT = 2,
   ONFOOT_SYNC = 3,
   CONNECTION_FAIL = 4,
-  CONNECTION_SUCCESS = 5
+  CONNECTION_SUCCESS = 5,
+  INCAR_SYNC = 6,
+  VEHICLES_SYNC = 7
 }
 
 S_RPC =
@@ -17,7 +19,11 @@ S_RPC =
   SET_PLAYER_POS = 4,
   PING_BACK = 5,
   SEND_MESSAGE = 6,
-  SEND_COMMAND = 7
+  SEND_COMMAND = 7,
+  CREATE_VEHICLE = 8,
+  DESTROY_VEHICLE = 9,
+  ENTER_VEHICLE = 10,
+  EXIT_VEHICLE = 11
 }
 
 SPool =
@@ -84,6 +90,24 @@ SPool.findFreePlayerId = function()
   end
   return playerid
 end
+SPool.findFreeVehicleId = function()
+  local vehicleid = 0
+  local findID = false
+  while not findID do
+    local wasID = false
+    vehicleid = vehicleid + 1
+    for i = 1, #SPool.sVehicles do
+      if SPool.sVehicles[i].vehicleid == vehicleid then
+        wasID = true
+        break
+      end
+    end
+    if not wasID then 
+      findID = true
+    end
+  end
+  return vehicleid
+end
 
 SPool.getClient = function(pAddress, pPort)
   for i = 1, #SPool.sPlayers do
@@ -103,6 +127,8 @@ function SPool.onPacketReceive(pID, pData, pAddress, pPort)
     pcall(Packet_Disconnect, pData, pAddress, pPort)
   elseif connected and pID == S_PACKETS.ONFOOT_SYNC then 
     pcall(Packet_OnFoot, pData, pAddress, pPort)
+  elseif connected and pID == S_PACKETS.INCAR_SYNC then 
+    pcall(Packet_InCar, pData, pAddress, pPort)
   elseif pID == S_PACKETS.SERVER_INFO then
     local pPool = {}
     for i = 1, #SPool.sPlayers do
@@ -129,8 +155,8 @@ function SPool.onRPCReceive(pID, pData, pAddress, pPort)
     SPool.sPlayers[clientID].ping = (os.clock() - SPool.sPlayers[clientID].ltPingBackMS) * 1000
     SPool.sPlayers[clientID].ltPingServer = os.time()
   elseif connected and pID == S_RPC.SEND_MESSAGE and type(pData.message) == 'string' then
-    pcall(onPlayerChat, SPool.sPlayers[clientID].playerid, pData.message)
+    pcall(onPlayerChat, SPool.sPlayers[clientID].playerid, pData.message:gsub('[%%%[%]%{%}]', '#'))
   elseif connected and pID == S_RPC.SEND_COMMAND and type(pData.command) == 'string' then
-    pcall(onPlayerCommand, SPool.sPlayers[clientID].playerid, pData.command)
+    pcall(onPlayerCommand, SPool.sPlayers[clientID].playerid, pData.command:gsub('[%%%[%]%{%}]', '#'))
   end
 end

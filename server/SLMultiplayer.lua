@@ -4,6 +4,8 @@ dofile(mpFolder .. "\\SLNetwork.lua") -- SL:MP Network File
 dofile(mpFolder .. "\\SLPackets.lua") -- SL:MP Packets Proccessing File
 dofile(mpFolder .. "\\SLFunctions.lua") -- SL:MP Server Functions File
 
+debugPacketsAndRPC = false
+
 SConfig =
 {
   serverName = 'SL:MP Server',
@@ -56,6 +58,7 @@ end
 gmFile:close()
 dofile(string.format('../gamemodes/%s.lua', SConfig.gamemodeScript))
 
+onGamemodeInit()
 print('-----------------------------------')
 print(string.format('TOTAL VEHICLES LOADED: %s', #SPool.sVehicles))
 
@@ -84,10 +87,10 @@ while true do
 
     local data = json.decode(data)
     if type == 'P' then
-      --print('p', id, json.encode(data))
+      if debugPacketsAndRPC then print('p', id, json.encode(data)) end
       pcall(SPool.onPacketReceive, tonumber(id), data, msg_or_ip or '', port_or_nil or 0)
     elseif type == 'R' then
-      --print('r', id, json.encode(data))
+      if debugPacketsAndRPC then print('r', id, json.encode(data)) end
       pcall(SPool.onRPCReceive, tonumber(id), data, msg_or_ip or '', port_or_nil or 0)
     end
     
