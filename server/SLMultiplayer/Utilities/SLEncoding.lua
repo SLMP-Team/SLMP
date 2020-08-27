@@ -1,4 +1,4 @@
-local encoding = {}
+encoding = {}
 
 function encoding.Uint8ToBytes(uint8)
   if type(uint8) ~= 'number' then
