@@ -1,5 +1,48 @@
 encoding = {}
 
+function encoding.Uint8ToInt8(uint8)
+  if uint8 > 0xFF then
+    return false
+  end
+
+  return uint8 - (uint8 & 128) * 2
+end
+
+function encdoing.Int8ToUint8(int8)
+  if int8 < -128 or int8 > 127 then
+    return false
+  end
+  return bit.band(int8, 0xFF)
+end
+
+function encoding.Uint16ToInt16(uint16)
+  if uint16 > 0xFFFF then
+    return false
+  end
+  return uint16 - (uint16 & 32768) * 2
+end
+
+function encdoing.Int16ToUint16(int16)
+  if int16 < -32768 or int16 > 32767 then
+    return false
+  end
+  return bit.band(int16, 0xFFFF)
+end
+
+function encoding.Uint32ToInt32(uint32)
+  if uint32 > 0xFFFFFFFF then
+    return false
+  end
+  return uint32 - (uint32, 2147483648) * 2
+end
+
+function encdoing.Int32ToUint32(int32)
+  if int32 < −2147483648 or int32 > 2147483647 then
+    return false
+  end
+  return bit.band(int32, 0xFFFFFFFF)
+end
+
 function encoding.Uint8ToBytes(uint8)
   if type(uint8) ~= 'number' then
     return false
