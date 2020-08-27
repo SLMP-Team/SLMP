@@ -40,7 +40,7 @@ function encoding.BytesToUint16(bytes)
   if type(bytes) ~= 'string' then
     return false
   end
-  if #bytes == 0 or #bytes > 3 then
+  if #bytes == 0 or #bytes > 2 then
     return false
   end
 
@@ -68,7 +68,7 @@ function encoding.BytesToUint32(bytes)
   if type(bytes) ~= 'string' then
     return false
   end
-  if #bytes == 0 or #bytes > 5 then
+  if #bytes == 0 or #bytes > 4 then
     return false
   end
 
@@ -81,6 +81,9 @@ local function grabByte(v)
 end
 
 function encoding.FloatToBytes(float)
+  if type(bytes) ~= 'number' then
+    return false
+  end
   local sign = 0
   if float < 0 then
     sign = 1;
@@ -107,6 +110,9 @@ function encoding.FloatToBytes(float)
 end
 
 function encoding.BytesToFloat(bytes)
+  if type(bytes) ~= 'string' then
+    return false
+  end
   local sign = 1
   local mantissa = string.byte(bytes, 3) % 128
 
@@ -144,6 +150,7 @@ function encoding.BytesToBool(bytes)
     return false
   end
 
+  return not string.byte(bytes) ~= 0
 end
 
 return encoding
