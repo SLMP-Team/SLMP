@@ -3,15 +3,17 @@ function sendClientMessage(playerid, message, color)
   if type(message) ~= 'string' then return false end
   for i = 1, #SPool.sPlayers do
     if SPool.sPlayers[i].playerid == playerid then
-      SPool.sendRPC(S_RPC.SEND_MESSAGE, {message = message, color = color}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+      SPool.sendRPC(S_RPC.CLIENT_MESSAGE, {message = message, color = color}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
       return true
     end
   end
   return false
 end
 function sendClientMessageToAll(message, color)
+  if type(message) ~= 'string' then return false end
+  if not color then color = 0xFFFFFFFF end
   for i = 1, #SPool.sPlayers do
-    sendClientMessage(SPool.sPlayers[i].playerid, message, color)
+    SPool.sendRPC(S_RPC.CLIENT_MESSAGE, {message = message, color = color}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
   end
   return true
 end
@@ -33,7 +35,7 @@ function createVehicle(model, posX, posY, posZ, color1, color2)
     position = {posX, posY, posZ},
     quaternion = {0.0, 0.0, 0.0, 0.0},
     facingAngle = 0.0, 
-    health = 0.0,
+    health = 1000.0,
     roll = 0.0,
     colors = {color1, color2},
     streamedFor = {}
@@ -45,7 +47,6 @@ function createVehicle(model, posX, posY, posZ, color1, color2)
       model = SPool.sVehicles[slot].model
     }, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
   end
-  print('created vehicle with id ' .. vehicleid)
   return vehicleid
 end
 function destroyVehicle(vehicleid)
@@ -66,6 +67,45 @@ function getPlayerPos(playerid)
   for i = 1, #SPool.sPlayers do
     if SPool.sPlayers[i].playerid == playerid then
       return SPool.sPlayers[i].position[1], SPool.sPlayers[i].position[2], SPool.sPlayers[i].position[3]
+    end
+  end
+  return false
+end
+function setPlayerPos(playerid, posX, posY, posZ)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      SPool.sendRPC(S_RPC.SET_PLAYER_POS, {
+        position = {posX, posY, posZ}
+      }, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+      SPool.sPlayers[i].position = {posX, posY, posZ}
+      return true
+    end
+  end
+end
+function isPlayerConnected(playerid)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      return true
+    end
+  end
+  return false
+end
+function getPlayerSkin(playerid)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      return SPool.sPlayers[i].skin
+    end
+  end
+  return 0
+end
+function setPlayerSkin(playerid, skin)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      SPool.sPlayers[i].skin = skin
+      SPool.sendRPC(S_RPC.SET_PLAYER_SKIN, {
+        skin = SPool.sPlayers[i].skin
+      }, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+      return true
     end
   end
   return false

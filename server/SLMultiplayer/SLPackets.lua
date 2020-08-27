@@ -44,11 +44,14 @@ function Packet_Connect(pData, pAddress, pPort)
     facingAngle = 0.0,
     health = 100.0,
     armour = 0.0,
+    skin = 0,
     stream = 
     {
       players = {}, 
       vehicles = {}
-    }
+    },
+    playerState = S_PLAYERSTATE.PS_ONFOOT,
+    vehicleID = 0, vehicleSeatID = 0
   }
   for i = 1, #SPool.sPlayers do
     SPool.sendRPC(S_RPC.PLAYER_JOIN, {
@@ -69,8 +72,8 @@ function Packet_Connect(pData, pAddress, pPort)
       model = SPool.sVehicles[i].model
     }, pAddress, pPort)
   end
-  pcall(onPlayerConnect, playerid)
   print(string.format('[PLAYER] %s [%s:%s:%s] connected to server', pData.nickname, pAddress, pPort, playerid))
+  assert(pcall(onPlayerConnect, playerid), 'OnPlayerConnect Callback Critical Error')
   return true
 end
 
@@ -100,6 +103,10 @@ function Packet_OnFoot(pData, pAddress, pPort)
   local connected, clientID = SPool.getClient(pAddress, pPort)
   if not connected then return false end
   
+  if SPool.sPlayers[clientID].playerState ~= S_PLAYERSTATE.PS_ONFOOT then
+    return false
+  end
+
   SPool.sPlayers[clientID].position = pData.position
   SPool.sPlayers[clientID].quaternion = pData.quaternion
   SPool.sPlayers[clientID].velocity = pData.velocity
@@ -132,6 +139,9 @@ function Packet_OnFoot(pData, pAddress, pPort)
       SPool.sendPacket(S_PACKETS.VEHICLES_SYNC, {
         vehicleid = SPool.sVehicles[i].vehicleid,
         position = SPool.sVehicles[i].position,
+        quaternion = SPool.sVehicles[i].quaternion,
+        facingAngle = SPool.sVehicles[i].facingAngle,
+        health = SPool.sVehicles[i].health,
         streamedForPlayer = 1
       }, pAddress, pPort)
       table.insert(SPool.sVehicles[i].streamedFor, SPool.sPlayers[clientID].playerid)
@@ -155,7 +165,7 @@ function Packet_OnFoot(pData, pAddress, pPort)
           SPool.sendPacket(S_PACKETS.ONFOOT_SYNC, {playerid = SPool.sPlayers[clientID].playerid, streamedForPlayer = 0}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
         end
       else
-        SPool.sendPacket(S_PACKETS.ONFOOT_SYNC, {playerid = SPool.sPlayers[clientID].playerid, streamedForPlayer = 1, data = pData}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+        SPool.sendPacket(S_PACKETS.ONFOOT_SYNC, {playerid = SPool.sPlayers[clientID].playerid, streamedForPlayer = 1, skin = SPool.sPlayers[clientID].skin, data = pData}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
         local wereStreamed = false
         for ii = #SPool.sPlayers[i].stream.players, 1, -1 do
           if SPool.sPlayers[i].stream.players[ii] == SPool.sPlayers[clientID].playerid then
@@ -172,9 +182,50 @@ function Packet_OnFoot(pData, pAddress, pPort)
   return true
 end
 
+function Packet_UnoccupiedSync(pData, pAddress, pPort)
+  local connected, clientID = SPool.getClient(pAddress, pPort)
+  if not connected then return false end
+
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].vehicleID == pData.vehicleid and SPool.sPlayers[i].vehicleSeatID == 0 then
+      return false
+    end
+  end
+
+  local car = -1
+  for i = 1, #SPool.sVehicles do
+    if SPool.sVehicles[i].vehicleid == pData.vehicleid then
+      car = i
+      break
+    end
+  end
+  if car == -1 then return false end
+  if SPool.sVehicles[car].position == pData.position then
+    return false 
+  end
+  SPool.sVehicles[car].position = pData.position
+
+  for i = 1, #SPool.sPlayers do
+    if i ~= clientID then
+      local dist = getDistBetweenPoints(pData.position[1], pData.position[2], pData.position[3],
+      SPool.sPlayers[i].position[1], SPool.sPlayers[i].position[2], SPool.sPlayers[i].position[3])
+      if dist <= SConfig.streamDistance then
+        SPool.sendPacket(S_PACKETS.UNOCCUPIED_SYNC, pData, 
+        SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+      end
+    end
+  end
+
+  return true
+end
+
 function Packet_InCar(pData, pAddress, pPort)
   local connected, clientID = SPool.getClient(pAddress, pPort)
   if not connected then return false end
+
+  if SPool.sPlayers[clientID].playerState == S_PLAYERSTATE.PS_ONFOOT then
+    return false
+  end
 
   local car = -1
   for i = 1, #SPool.sVehicles do
@@ -185,6 +236,7 @@ function Packet_InCar(pData, pAddress, pPort)
   end
   if car == -1 then return false end
 
+  SPool.sPlayers[clientID].position = pData.position
   SPool.sVehicles[car].position = pData.position
   SPool.sVehicles[car].quaternion = pData.quaternion
   SPool.sVehicles[car].roll = pData.roll
@@ -216,6 +268,9 @@ function Packet_InCar(pData, pAddress, pPort)
       SPool.sendPacket(S_PACKETS.VEHICLES_SYNC, {
         vehicleid = SPool.sVehicles[i].vehicleid,
         position = SPool.sVehicles[i].position,
+        quaternion = SPool.sVehicles[i].quaternion,
+        facingAngle = SPool.sVehicles[i].facingAngle,
+        health = SPool.sVehicles[i].health,
         streamedForPlayer = 1
       }, pAddress, pPort)
       table.insert(SPool.sVehicles[i].streamedFor, SPool.sPlayers[clientID].playerid)
@@ -240,7 +295,7 @@ function Packet_InCar(pData, pAddress, pPort)
           SPool.sendPacket(S_PACKETS.INCAR_SYNC, {playerid = SPool.sPlayers[clientID].playerid, streamedForPlayer = 0}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
         end
       else
-        SPool.sendPacket(S_PACKETS.INCAR_SYNC, {playerid = SPool.sPlayers[clientID].playerid, streamedForPlayer = 1, data = pData}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+        SPool.sendPacket(S_PACKETS.INCAR_SYNC, {playerid = SPool.sPlayers[clientID].playerid, streamedForPlayer = 1, skin = SPool.sPlayers[clientID].skin, data = pData}, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
         local wereStreamed = false
         for ii = #SPool.sPlayers[i].stream.players, 1, -1 do
           if SPool.sPlayers[i].stream.players[ii] == SPool.sPlayers[clientID].playerid then

@@ -6,7 +6,7 @@ udp = socket.udp()
 
 SInfo =
 {
-  sVersion = 'SL:MP 0.0.1-Alpha'
+  sVersion = 'SL:MP 0.0.1-Alpha-R3'
 }
 
 local doesFileExist = function(file_path)
@@ -49,4 +49,32 @@ end
 
 function getDistBetweenPoints(x1, y1, z1, x2, y2, z2)
   return math.sqrt((x2 - x1)^2 + (y2 - y1)^2 + (z2 - z1)^2)
+end
+
+CTimer =
+{
+  Timers = {},
+  TimerID = -1
+}
+function CTimer.setTimer(timeMS, repeatTimer, callback, ...)
+  CTimer.TimerID = CTimer.TimerID + 1
+  local timerid = CTimer.TimerID
+  table.insert(CTimer.Timers, {
+    timerid = timerid,
+    callback = callback,
+    interval = timeMS / 1000,
+    time = os.clock() + timeMS / 1000,
+    repeatTimer = repeatTimer,
+    arguments = arg or {}
+  })
+  return timerid
+end
+function CTimer.killTimer(timerid)
+	for i = #CTimer.Timers, 1, -1 do
+		if CTimer.Timers[i].timerid == timerid then
+			table.remove(CTimer.Timers, i)
+			return true
+		end
+	end
+	return false
 end

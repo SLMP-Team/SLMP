@@ -7,7 +7,8 @@ S_PACKETS =
   CONNECTION_FAIL = 4,
   CONNECTION_SUCCESS = 5,
   INCAR_SYNC = 6,
-  VEHICLES_SYNC = 7
+  VEHICLES_SYNC = 7,
+  UNOCCUPIED_SYNC = 8
 }
 
 S_RPC =
@@ -23,7 +24,16 @@ S_RPC =
   CREATE_VEHICLE = 8,
   DESTROY_VEHICLE = 9,
   ENTER_VEHICLE = 10,
-  EXIT_VEHICLE = 11
+  EXIT_VEHICLE = 11,
+  CAR_JACKED = 12,
+  SET_PLAYER_SKIN = 13
+}
+
+S_PLAYERSTATE =
+{
+  PS_ONFOOT = 0,
+  PS_DRIVER = 1,
+  PS_PASSANGER = 2
 }
 
 SPool =
@@ -120,6 +130,8 @@ SPool.getClient = function(pAddress, pPort)
 end
 
 function SPool.onPacketReceive(pID, pData, pAddress, pPort)
+  local res, ans = pcall(onIncomingPacket, pID, pData, pAddress, pPort)
+  if res and not ans then return false end
   local connected, clientID = SPool.getClient(pAddress, pPort)
   if pID == S_PACKETS.CONNECT then 
     pcall(Packet_Connect, pData, pAddress, pPort)
@@ -129,6 +141,8 @@ function SPool.onPacketReceive(pID, pData, pAddress, pPort)
     pcall(Packet_OnFoot, pData, pAddress, pPort)
   elseif connected and pID == S_PACKETS.INCAR_SYNC then 
     pcall(Packet_InCar, pData, pAddress, pPort)
+  elseif connected and pID == S_PACKETS.UNOCCUPIED_SYNC then 
+    pcall(Packet_UnoccupiedSync, pData, pAddress, pPort)
   elseif pID == S_PACKETS.SERVER_INFO then
     local pPool = {}
     for i = 1, #SPool.sPlayers do
@@ -142,12 +156,15 @@ function SPool.onPacketReceive(pID, pData, pAddress, pPort)
       language = 'English',
       version = SInfo.sVersion,
       gamemode = SConfig.gamemodeScript,
-      playersPool = pPool
+      playersPool = pPool,
+      nametagsDistance = SConfig.nametagsDistance
     }, pAddress, pPort)
   end
 end
 
 function SPool.onRPCReceive(pID, pData, pAddress, pPort)
+  local res, ans = pcall(onIncomingRPC, pID, pData, pAddress, pPort)
+  if res and not ans then return false end
   local connected, clientID = SPool.getClient(pAddress, pPort)
   if pID == S_RPC.PING_SERVER then
     SPool.sendRPC(S_RPC.PING_BACK, {a = 1}, pAddress, pPort)
@@ -158,5 +175,24 @@ function SPool.onRPCReceive(pID, pData, pAddress, pPort)
     pcall(onPlayerChat, SPool.sPlayers[clientID].playerid, pData.message:gsub('[%%%[%]%{%}]', '#'))
   elseif connected and pID == S_RPC.SEND_COMMAND and type(pData.command) == 'string' then
     pcall(onPlayerCommand, SPool.sPlayers[clientID].playerid, pData.command:gsub('[%%%[%]%{%}]', '#'))
+  elseif connected and pID == S_RPC.ENTER_VEHICLE then
+    for i = 1, #SPool.sPlayers do
+      if clientID ~= i and SPool.sPlayers[i].vehicleID == pData.vehicleid 
+      and SPool.sPlayers[i].vehicleSeatID == pData.seatID then
+        SPool.sPlayers[i].vehicleID = 0
+        SPool.sPlayers[i].vehicleSeatID = 0
+        SPool.sPlayers[i].playerState = S_PLAYERSTATE.PS_ONFOOT
+        SPool.sendRPC(S_RPC.CAR_JACKED, {
+          vehicleid = pData.vehicleid
+        }, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+      end
+    end
+    SPool.sPlayers[clientID].playerState = (pData.seatID == 0 and S_PLAYERSTATE.PS_DRIVER or S_PLAYERSTATE.PS_PASSANGER)
+    SPool.sPlayers[clientID].vehicleID = pData.vehicleid 
+    SPool.sPlayers[clientID].vehicleSeatID = pData.seatID
+  elseif connected and pID == S_RPC.EXIT_VEHICLE then
+    SPool.sPlayers[clientID].playerState = S_PLAYERSTATE.PS_ONFOOT
+    SPool.sPlayers[clientID].vehicleID = 0
+    SPool.sPlayers[clientID].vehicleSeatID = 0
   end
 end
