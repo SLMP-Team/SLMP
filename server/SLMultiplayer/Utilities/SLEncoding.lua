@@ -128,6 +128,21 @@ function encoding.BytesToFloat(bytes)
   return math.ldexp(mantissa, exponent - 127)
 end
 
+function encoding.BoolToBytes(bool)
+  if type(uint32) ~= 'boolean' then
+    return false
+  end
+
+  return encoding.Uint8ToBytes(bool and 1 or 0)
+end
+
+function encoding.BytesToBool(bytes)
+  if type(bytes) ~= 'string' then
+    return false
+  end
+  if #bytes == 0 or #bytes > 1 then
+    return false
+  end
 
 end
 
