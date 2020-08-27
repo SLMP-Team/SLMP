@@ -178,7 +178,7 @@ function encoding.BytesToFloat(bytes)
 end
 
 function encoding.BoolToBytes(bool)
-  if type(uint32) ~= 'boolean' then
+  if type(bool) ~= 'boolean' then
     return false
   end
 
