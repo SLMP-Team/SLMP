@@ -4,9 +4,9 @@ function RPC_CreateVehicle(pData)
   {
     vehicleid = pData.vehicleid,
     model = pData.model,
-    colors = pData.colors
+    colors = pData.colors,
+    position = {0.0, 0.0, 0.0}
   }
-  print('carCreated')
   return true
 end
 
@@ -17,7 +17,6 @@ function RPC_DestroyVehicle(pData)
         deleteCar(GPool.GVehicles[car].handle)
       end
       table.remove(GPool.GVehicles, car)
-      print('carDeleted')
       return true
     end
   end

@@ -59,10 +59,19 @@ function(self)
 	while clipper:Step() do
 		for i = clipper.DisplayStart + 1, clipper.DisplayEnd do
       if CGraphics.ChatSettings.tChatMessages[i] ~= nil then
-        local timetag = '{FFFFFF}[' .. os.date('%H:%M:%S', CGraphics.ChatSettings.tChatMessages[i].time) .. '] '
+        local timetag = ('{%6X}'):format(CGraphics.ChatSettings.tChatMessages[i].color) .. '[' .. os.date('%H:%M:%S', CGraphics.ChatSettings.tChatMessages[i].time) .. '] '
         local tpos = imgui.GetCursorPos()
-        imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''))
-        imgui.SetCursorPos(imgui.ImVec2(tpos.x - 1, tpos.y - 1))
+        
+        imgui.SetCursorPos(imgui.ImVec2(tpos.x + 1, tpos.y))
+        imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
+        imgui.SetCursorPos(imgui.ImVec2(tpos.x - 1, tpos.y))
+        imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
+        imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y + 1))
+        imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
+        imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y - 1))
+        imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
+        
+        imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y))
         CGraphics.TextColoredRGB(u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text))
 			end
 		end
@@ -341,6 +350,9 @@ function(self)
 end)
 
 CGraphics.addMessage = function(message, color)
+  if type(message) ~= 'string' or type(color) ~= 'number' then
+    return false
+  end
   if #CGraphics.ChatSettings.tChatMessages >= 100 then
     for i = #CGraphics.ChatSettings.tChatMessages, 1, -1 do
       if i == 1 then

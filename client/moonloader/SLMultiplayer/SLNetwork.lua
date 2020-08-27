@@ -7,7 +7,8 @@ S_PACKETS =
   CONNECTION_FAIL = 4,
   CONNECTION_SUCCESS = 5,
   INCAR_SYNC = 6,
-  VEHICLES_SYNC = 7
+  VEHICLES_SYNC = 7,
+  UNOCCUPIED_SYNC = 8
 }
 
 S_RPC =
@@ -23,7 +24,9 @@ S_RPC =
   CREATE_VEHICLE = 8,
   DESTROY_VEHICLE = 9,
   ENTER_VEHICLE = 10,
-  EXIT_VEHICLE = 11
+  EXIT_VEHICLE = 11,
+  CAR_JACKED = 12,
+  SET_PLAYER_SKIN = 13
 }
 
 SPool =
@@ -31,7 +34,8 @@ SPool =
   sName = '',
   sIP = '',
   sPort = 0,
-  sPing = 999
+  sPing = 999,
+  sNametag = 20.0
 }
 
 SPool.setAddress = function(ip, port)
@@ -111,6 +115,8 @@ SPool.onPacketReceive = function(pID, pData)
     pcall(Packet_OnFoot, pData)
   elseif pID == S_PACKETS.INCAR_SYNC then
     pcall(Packet_InCar, pData)
+  elseif pID == S_PACKETS.UNOCCUPIED_SYNC then
+    pcall(Packet_UnoccupiedSync, pData)
   elseif pID == S_PACKETS.VEHICLES_SYNC then
     Packet_VehicleSync(pData)
   elseif pID == S_PACKETS.SERVER_INFO then
@@ -127,6 +133,8 @@ SPool.onPacketReceive = function(pID, pData)
       CConfig.servers[CGraphics.tClientSelectedServer].playersPool = pData.playersPool
       CConfig.servers[CGraphics.tClientSelectedServer].website = pData.website
       CConfig.servers[CGraphics.tClientSelectedServer].version = pData.version
+      SPool.sName = pData.name
+      SPool.sNametag = pData.nametagsDistance
     end
   end
 end
@@ -147,7 +155,7 @@ SPool.onRPCReceive = function(pID, pData)
       nickname = pData.nickname,
       position = {0.0, 0.0, 0.0},
       health = 100.0, armour = 0.0,
-      inCar = 0
+      inCar = 0, skin = 0
     }
   elseif pID == S_RPC.PLAYER_LEAVE then
     for i = #GPool.GPlayers, 1, -1 do
@@ -158,13 +166,25 @@ SPool.onRPCReceive = function(pID, pData)
         table.remove(GPool.GPlayers, i)
       end
     end
-  elseif pID == S_RPC.SEND_MESSAGE then
+  elseif pID == S_RPC.CLIENT_MESSAGE then
     CGraphics.addMessage(pData.message, pData.color)
   elseif pID == S_RPC.CREATE_VEHICLE then
-    print('RPC create')
     pcall(RPC_CreateVehicle, pData)
   elseif pID == S_RPC.DESTROY_VEHICLE then
     pcall(RPC_DestroyVehicle, pData)
+  elseif pID == S_RPC.SET_PLAYER_POS then
+    setCharCoordinates(PLAYER_PED, pData.position[1], pData.position[2], pData.position[3])
+  elseif pID == S_RPC.CAR_JACKED then
+    if isCharInAnyCar(PLAYER_PED) then
+      local carHandle = storeCarCharIsInNoSave(PLAYER_PED)
+      taskLeaveCar(PLAYER_PED, carHandle)
+      printStyledString('~r~CAR JACKED', 2000, 4)
+    end
+  elseif pID == S_RPC.SET_PLAYER_SKIN then
+    requestModel(pData.skin)
+    loadAllModelsNow()
+    setPlayerModel(PLAYER_HANDLE, pData.skin)
+    markModelAsNoLongerNeeded(pData.skin)
   end
 end
 

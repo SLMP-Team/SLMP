@@ -1,6 +1,6 @@
 CGame = 
 {
-  cVersion = 'SL:MP 0.0.1-Alpha',
+  cVersion = 'SL:MP 0.0.1-Alpha-R3',
   cScreen = {x = 0, y = 0}
 }
 
@@ -82,15 +82,30 @@ CGame.workInPause = function()
   memory.fill(5499528, 144, 6)
   memory.fill(0x748063, 0x90, 5, true)
 end
-CGame.getVehicleSeat = function()
-  local car = storeCarCharIsInNoSave(PLAYER_PED)
-  for i = 0, getMaximumNumberOfPassengers(car) - 1 do
-    if not isCarPassengerSeatFree(car, i) and getCharInCarPassengerSeat(car, i) == PLAYER_PED then
-      return i
+CGame.getVehicleSeat = function(ped)
+  if doesCharExist(ped) and isCharInAnyCar(ped) then
+    local car = storeCarCharIsInNoSave(ped)
+    for i = 0, getMaximumNumberOfPassengers(car) - 1 do
+      if not isCarPassengerSeatFree(car, i) and getCharInCarPassengerSeat(car, i) == ped then
+        return i
+      end
     end
   end
   return 0
 end
 CGame.disableParkedCars = function()
   memory.write(0x9690A0, 0, 4, true)
+end
+CGame.setVehicleDamagable = function(handle, status)
+  if not doesVehicleExist(handle) then return end
+  setCarProofs(handle, not status, not status, not status, not status, not status)
+  setCarCanBeDamaged(handle, status)
+end
+
+CGame.getBonePosition = ffi.cast("int (__thiscall*)(void*, float*, int, bool)", 0x5E4280)
+CGame.getBodyPartCoordinates = function(id, handle)
+  local pedptr = getCharPointer(handle)
+  local vec = ffi.new("float[3]")
+  CGame.getBonePosition(ffi.cast("void*", pedptr), vec, id, true)
+  return vec[0], vec[1], vec[2]
 end

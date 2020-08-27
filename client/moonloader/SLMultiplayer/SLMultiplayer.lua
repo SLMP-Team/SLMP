@@ -16,6 +16,7 @@ renderArial = renderCreateFont('Arial', 12)
 renderVerdana = renderCreateFont('Verdana', 8)
 
 ltSendOnFootSync = os.clock()
+ltSendUnoccupied = os.clock()
 
 appdataFolder = getFolderPath(0x1C)
 configFolder = appdataFolder..'\\SLTEAM\\SLMP'
@@ -134,12 +135,13 @@ function checkPlayerState()
     for i = 1, #GPool.GVehicles do
       local car = storeCarCharIsInNoSave(PLAYER_PED)
       if GPool.GVehicles[i].handle and GPool.GVehicles[i].handle == car then
-        local carSeat = CGame.getVehicleSeat()
+        local carSeat = CGame.getVehicleSeat(PLAYER_PED)
         if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_ONFOOT then
-          SPool.sendPacket(S_RPC.ENTER_VEHICLE, {
+          SPool.sendRPC(S_RPC.ENTER_VEHICLE, {
             vehicleid = GPool.GVehicles[i].vehicleid,
             seatID = tonumber(carSeat)
           })
+          ltSendOnFootSync = os.clock() - 0.5
         end
         if carSeat and carSeat == 0 then 
           LPlayer.lpPlayerState = S_PLAYERSTATE.PS_DRIVER
@@ -151,7 +153,7 @@ function checkPlayerState()
   else 
     if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER 
     or LPlayer.lpPlayerState == S_PLAYERSTATE.PS_PASSANGER then
-      SPool.sendPacket(S_RPC.EXIT_VEHICLE, {
+      SPool.sendRPC(S_RPC.EXIT_VEHICLE, {
         vehicleid = LPlayer.lpVehicleID,
         seatID = LPlayer.lpVehicleSeat
       })
