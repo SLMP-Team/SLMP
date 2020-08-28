@@ -15,7 +15,7 @@ function onPlayerConnect(playerid)
   local pX, pY, pZ = getPlayerPos(playerid)
   playerVehicles[playerid] = createVehicle(487, pX + 1.0, pY + 1.0, pZ + 1.5, 1, 1)
   setPlayerSkin(playerid, math.random(14, 18))
-  sendClientMessage(playerid, '{FF0000}Добро пожаловать на сервер!', 0xFFFFFFFF)
+  sendClientMessage(playerid, '{FF0000}Добро {28B463FF}пожаловать {F4D03FFF}на сервер!', 0xFFFFFFFF)
   sendClientMessageToAll('{FF0000}' .. getPlayerName(playerid) .. ' {FFFFFF}залетел на наш сервер!', 0xFF0000FF)
 end
 
@@ -33,6 +33,11 @@ end
 function onPlayerCommand(playerid, command)
   if command == 'help' then
     sendClientMessage(playerid, '{FFFFFF}Прости! Кажется, помощи нет, тебя обманули!', 0xFFFFFFFF)
+    return true
+  end
+  if command == 'kickme' then
+    sendClientMessage(playerid, '{FFFFFF}Вы были кикнуты с сервера по вашему желанию!', 0xFFFFFFFF)
+    kickPlayer(playerid)
     return true
   end
   sendClientMessage(playerid, '{FF0000}Неизвестная команда! {FFFFFF}Введите /help для помощи.', 0xFFFFFFFF)
