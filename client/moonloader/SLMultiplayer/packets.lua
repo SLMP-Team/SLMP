@@ -65,16 +65,16 @@ function Packet_OnFoot_Sync(bitStream)
     pData.facingAngle = SLNet.readFloat(bitStream)
   end
   for i = 1, #GPool.GPlayers do
-    if pData.playerid == GPool.GPlayers[i].playerid 
+    if pData.playerid == GPool.GPlayers[i].playerid
     and GPool.GPlayers[i].playerid ~= LPlayer.lpPlayerId then
       local player = GPool.GPlayers[i]
       if not pData.streamedForPlayer and player.handle and doesCharExist(player.handle) then
         deleteChar(player.handle)
         return false
       elseif pData.streamedForPlayer and (not player.handle or not doesCharExist(player.handle) or GPool.GPlayers[i].skin ~= pData.skin) then
-        if player.handle and doesCharExist(player.handle) 
-        and GPool.GPlayers[i].skin ~= pData.skin then 
-          deleteChar(player.handle) 
+        if player.handle and doesCharExist(player.handle)
+        and GPool.GPlayers[i].skin ~= pData.skin then
+          deleteChar(player.handle)
         end
         requestModel(pData.skin)
         loadAllModelsNow()
@@ -249,7 +249,7 @@ function Packet_InCar_Sync(bitStream)
       -- vehicle movespeed function ????
       if isCharInAnyCar(PLAYER_PED) then
         local carHandle = storeCarCharIsInNoSave(PLAYER_PED)
-        if carHandle == GPool.GVehicles[car].handle then 
+        if carHandle == GPool.GVehicles[car].handle then
           CGame.setVehicleDamagable(GPool.GVehicles[car].handle, true)
         else CGame.setVehicleDamagable(GPool.GVehicles[car].handle, false) end
       else CGame.setVehicleDamagable(GPool.GVehicles[car].handle, false) end

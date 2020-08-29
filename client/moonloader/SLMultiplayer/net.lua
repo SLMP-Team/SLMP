@@ -1,4 +1,4 @@
-SLNet = 
+SLNet =
 {
   BitStreams = {}
 }

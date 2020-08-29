@@ -29,7 +29,7 @@ end
 
 CConfig = json.load(configFolder .. '\\client.json', CConfig)
 if type(CConfig) ~= 'table' then
-  CConfig = 
+  CConfig =
   {
     playerName = 'Kalk0r',
     address = 'localhost:7777'
@@ -41,7 +41,7 @@ ffi.copy(CGraphics.ClientSettings.tAddress, u8(CConfig.address))
 
 function main()
   print("SL:MP initialization proccess complited")
-  
+
   setCharCoordinates(PLAYER_PED, 0.0, 0.0, 0.0)
   CGame.workInPause()
   displayCarNames(false)
@@ -49,6 +49,7 @@ function main()
   disableAllEntryExits(true)
   CGame.disableAllFuckingCity()
   CGame.disableBlurEffect()
+  CGame.disableBlueFog()
   CGame.disableHazeEffect()
   CGame.disableParkedCars()
   CGame.disableReplays()
@@ -63,7 +64,7 @@ function main()
   CGame.disableVehicles()
 
   setPlayerDisplayVitalStatsButton(PLAYER_HANDLE, false)
-  
+
   GPool.clearPool()
   LPlayer.updateStats()
 
@@ -87,7 +88,7 @@ function gameLoop()
       if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_ONFOOT then
         if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.05 and not isGamePaused() then
           local x, y, z = getCharCoordinates(PLAYER_PED)
-          if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2] 
+          if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2]
           or z ~= LPlayer.lpPosition[3] or os.clock() - ltSendOnFootSync >= 1.5 then
             LPlayer.updateStats()
             ltSendOnFootSync = os.clock()
@@ -124,7 +125,7 @@ function gameLoop()
           if slot ~= 0 then
             car = GPool.GVehicles[slot]
             local x, y, z = getCarCoordinates(GPool.GVehicles[slot].handle)
-            if x ~= GPool.GVehicles[slot].position[1] or y ~= GPool.GVehicles[slot].position[2] 
+            if x ~= GPool.GVehicles[slot].position[1] or y ~= GPool.GVehicles[slot].position[2]
             or z ~= GPool.GVehicles[slot].position[3] or os.clock() - ltSendOnFootSync >= 1.5 then
               LPlayer.updateStats()
               ltSendOnFootSync = os.clock()
@@ -157,7 +158,7 @@ function gameLoop()
                 SLNet.writeFloat(bs, vRoll)
                 SPool.sendPacket(bs)
                 SLNet.deleteBitStream(bs)
-              else 
+              else
                 local bs = SLNet.createBitStream()
                 SLNet.writeInt16(bs, S_PACKETS.INCAR_SYNC)
                 SLNet.writeInt16(bs, GPool.GVehicles[slot].vehicleid)
@@ -191,7 +192,7 @@ function renderNametags()
           local wposX, wposY = convert3DCoordsToScreen(rpX, rpY, rpZ + 0.4 + (dist * 0.05))
           local result, colPoint = processLineOfSight(camX, camY, camZ, rpX, rpY, rpZ, true, false, false, true, false, false, false, true)
           if not result then
-            renderFontDrawText(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. i .. ")", wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")") / 2, wposY, 0xFFFFFFFF)                 
+            renderFontDrawText(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. i .. ")", wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")") / 2, wposY, 0xFFFFFFFF)
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, 100 / 2, 6, 0xFF000000, 1, 0xFF000000)
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, GPool.GPlayers[i].health / 2, 6, 0xFFFF0000, 1, 0x00000000)
             if GPool.GPlayers[i].armour > 0 then

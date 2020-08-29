@@ -27,7 +27,7 @@ CGraphics =
 
 IM_FONTS = {}
 IM_WALLPAPER = {}
-imgui.OnInitialize(function() 
+imgui.OnInitialize(function()
   imgui.GetIO().IniFilename = nil
   for i = 1, 6 do
     local tmp = imgui.CreateTextureFromFile(mpFolder .. 'Resources\\Wallpapers\\wall'..i..'.jpg')
@@ -46,7 +46,7 @@ imgui.OnInitialize(function()
   IM_FONTS.INPUT_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', 18, nil, glyph_ranges)
   IM_FONTS.INFO_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', scrX / 96, nil, glyph_ranges)
   IM_FONTS.CHAT_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', CGraphics.ChatSettings.tChatFontSize, nil, glyph_ranges)
-  imgui.InvalidateFontsTexture()  
+  imgui.InvalidateFontsTexture()
 end)
 
 imgui.OnFrame(function() return not isGamePaused() and CGraphics.wChat[0] end,
@@ -55,7 +55,7 @@ function()
     CGraphics.ChatSettings.tChatFontLoaded = true
     local glyph_ranges = imgui.GetIO().Fonts:GetGlyphRangesCyrillic()
     IM_FONTS.CHAT_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', CGraphics.ChatSettings.tChatFontSize, nil, glyph_ranges)
-    imgui.InvalidateFontsTexture() 
+    imgui.InvalidateFontsTexture()
   end
 end,
 function(self)
@@ -86,7 +86,7 @@ function(self)
         imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
         imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y - 1))
         imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
-        
+
         imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y))
         CGraphics.TextColoredRGB(timetag .. CGraphics.ChatSettings.tChatMessages[i].text)
 			end
@@ -140,7 +140,7 @@ function(self)
 end)
 
 imgui.OnFrame(function() return CGraphics.wClient[0] and not isGamePaused() end,
-function(self) 
+function(self)
   imgui.LockPlayer = true
   imgui.HideCursor = false
   imgui.SetNextWindowPos(imgui.ImVec2(0, 0), imgui.Cond.FirstUseEver, imgui.ImVec2(0.0, 0.0))
@@ -221,16 +221,16 @@ function(self)
   imgui.PushStyleColor(imgui.Col.ChildBg, imgui.ImVec4(23 / 255, 24 / 255, 26 / 255, 1))
   imgui.SetCursorPos(imgui.ImVec2(0, CGraphics.ClientSettings.tStatusBarPos))
   if CGraphics.ClientSettings.tStatusBarPos > scrY - 20 then
-    CGraphics.ClientSettings.tStatusBarPos = 
+    CGraphics.ClientSettings.tStatusBarPos =
     CGraphics.ClientSettings.tStatusBarPos - 0.5
   end
   imgui.BeginChild('##statusbar', imgui.ImVec2(scrX, 20))
   imgui.SetCursorPos(imgui.ImVec2(10, 2))
   imgui.Text(u8(CGraphics.tClientPopupText))
   imgui.EndChild()
-  
+
   imgui.SetCursorPos(imgui.ImVec2(CGraphics.ClientSettings.tSideBarPos, 0))
-  if CGraphics.ClientSettings.tSideBarPos > (scrX - scrX / 4) 
+  if CGraphics.ClientSettings.tSideBarPos > (scrX - scrX / 4)
   and CGraphics.ClientSettings.tStatusBarPos <= scrY - 20 then
     CGraphics.ClientSettings.tSideBarPos =
     CGraphics.ClientSettings.tSideBarPos - 6
@@ -289,7 +289,7 @@ function(self)
   imgui.EndGroup()
   imgui.EndChild()
   imgui.PopStyleColor(1)
-  
+
   imgui.Spacing()
   imgui.PushFont(IM_FONTS.SUBTITLE_CLIENT)
   imgui.SetCursorPosX(10)
@@ -321,7 +321,7 @@ function(self)
 end)
 
 CGraphics.addMessage = function(message, color)
-  if type(message) ~= 'string' 
+  if type(message) ~= 'string'
   or type(color) ~= 'number' then
     return false
   end
@@ -357,7 +357,7 @@ CGraphics.TextColoredRGB = function(text, wrapped)
           end
 
           local clr = w:sub(a + 1, b - 1)
-          if clr:upper() == 'STANDART' then 
+          if clr:upper() == 'STANDART' then
             color = imgui.GetStyle().Colors[imgui.Col.Text]
           else
               clr = tonumber(clr, 16)
