@@ -75,7 +75,6 @@ function main()
       for i = #SLNet.BitStreams, 1, -1 do
         if os.time() >= SLNet.BitStreams[i].LifeTime then
           table.remove(SLNet.BitStreams, i)
-          print("Lacked BitStream Deleted!")
         end
       end
     end
@@ -249,7 +248,7 @@ function onWindowMessage(msg, wparam, lparam)
         if GPool.GVehicles[i].handle and doesVehicleExist(GPool.GVehicles[i].handle) then
           local cX, cY, cZ = getCarCoordinates(GPool.GVehicles[i].handle)
           local dist = getDistanceBetweenCoords3d(cX, cY, cZ, pX, pY, pZ)
-          if dist <= 80.0 then
+          if dist <= 20.0 then
             if data[1] == -1 or dist < data[2] then
               data[2] = dist
               data[1] = GPool.GVehicles[i].handle
