@@ -6,7 +6,7 @@ udp = socket.udp()
 
 SInfo =
 {
-  sVersion = 'SL:MP 0.0.1-RC5'
+  sVersion = 'SL:MP 0.0.1-RC6'
 }
 
 local doesFileExist = function(file_path)
@@ -25,11 +25,11 @@ local updateTable = function(default_table, fJson)
 	return fJson
 end
 json.load = function(json_file, default_table)
-	if not default_table or type(default_table) ~= 'table' then default_table = {} end 
+	if not default_table or type(default_table) ~= 'table' then default_table = {} end
 	if not json_file or not doesFileExist(json_file) then return false end
 	local fHandle = io.open(json_file, 'r')
 	if not fHandle then return false end
-	local fText = fHandle:read('*all') 
+	local fText = fHandle:read('*all')
 	fHandle:close()
 	if not fText then return false end
 	local fRes, fJson = pcall(json.decode, fText)

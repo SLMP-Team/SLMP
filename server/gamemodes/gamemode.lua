@@ -7,6 +7,7 @@ function onGamemodeInit()
   createVehicle(484, -242.0115, -367.5419, 1.3931, 0, 0)
   setTimer((60*1000), true, sendClientMessageToAll, 'Спасибо, что играете на нашем сервере!', 0xFFFF00FF)
   -- Таймеры временно не работают :з
+  testPickup = createPickup(1239, 2, -25.3066, 47.5188, 3.1171, 0, 0)
 end
 
 local playerVehicles = {}
@@ -18,8 +19,10 @@ function onPlayerConnect(playerid)
 end
 
 function onPlayerSpawn(playerid)
-  setPlayerSkin(playerid, math.random(14, 18))
+  resetWeapons(playerid)
+  setPlayerSkin(playerid, 312)
   setPlayerPos(playerid, math.random(0, 50), math.random(0, 50), 2.0)
+  giveWeapon(playerid, 24, 15)
 end
 
 function onPlayerDisconnect(playerid, reason)
@@ -31,6 +34,12 @@ end
 
 function onPlayerChat(playerid, message)
   sendClientMessageToAll('[' .. getPlayerName(playerid) .. ']: {919191}' .. message, 0xFFFFFFFF)
+end
+
+function onPlayerPickPickup(playerid, pickupid)
+  if pickupid == testPickup then
+    sendClientMessage(playerid, 'Вы подняли пикап!', 0xFFFFFFFF)
+  end
 end
 
 function onPlayerCommand(playerid, command)
@@ -56,6 +65,10 @@ function onPlayerCommand(playerid, command)
   elseif command:match('^setint%s(%d+)') then
     local int = command:match('^setint%s(%d+)')
     setPlayerInterior(playerid, int)
+    return true
+  elseif command:match('^skin%s(%d+)') then
+    local skinid = command:match('^skin%s(%d+)')
+    setPlayerSkin(playerid, tonumber(skinid))
     return true
   end
   sendClientMessage(playerid, '{FF0000}Неизвестная команда! {FFFFFF}Введите /help для помощи.', 0xFFFFFFFF)
@@ -90,7 +103,7 @@ function onIncomingPacket(bitStream, clientIP, clientPort)
   -- Наполнение BitStream можно изменять, это будет иметь эффект при обработке
 end
 
-function onIcomingRPC(bitStream, clientIP, clientPort)
+function onIncomingRPC(bitStream, clientIP, clientPort)
   return true -- если не отправить TRUE, RPC не обработается сервером
   -- Если нужно игнорировать RPC, можно использовать RETURN FALSE
   -- Наполнение BitStream можно изменять, это будет иметь эффект при обработке

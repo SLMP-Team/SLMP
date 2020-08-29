@@ -103,7 +103,7 @@ while true do
       SLNet.deleteBitStream(bs)
     end
   end
-  
+
   local data, msg_or_ip, port_or_nil = udp:receivefrom()
   if data then
     local NetType = data:sub(1, 6)
