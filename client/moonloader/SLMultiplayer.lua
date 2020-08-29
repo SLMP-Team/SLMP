@@ -29,7 +29,7 @@ end
 
 CConfig = json.load(configFolder .. '\\client.json', CConfig)
 if type(CConfig) ~= 'table' then
-  CConfig =
+  CConfig = 
   {
     playerName = 'Kalk0r',
     address = 'localhost:7777'
@@ -41,7 +41,7 @@ ffi.copy(CGraphics.ClientSettings.tAddress, u8(CConfig.address))
 
 function main()
   print("SL:MP initialization proccess complited")
-
+  
   setCharCoordinates(PLAYER_PED, 0.0, 0.0, 0.0)
   CGame.workInPause()
   displayCarNames(false)
@@ -59,24 +59,34 @@ function main()
   CGame.disableMessagePrint()
   CGame.disableSpawnCars()
   CGame.disableWasted()
-  CGame.disableMessagePrint()
   CGame.disableCharacters()
   CGame.disableVehicles()
 
   setPlayerDisplayVitalStatsButton(PLAYER_HANDLE, false)
-
+  
   GPool.clearPool()
   LPlayer.updateStats()
 
   lua_thread.create(gameLoop)
   lua_thread.create(networkLoop)
+  lua_thread.create(function() 
+    while true do
+      wait(5000)
+      for i = #SLNet.BitStreams, 1, -1 do
+        if os.time() >= SLNet.BitStreams[i].LifeTime then
+          table.remove(SLNet.BitStreams, i)
+          print("Lacked BitStream Deleted!")
+        end
+      end
+    end
+  end)
 end
 
 function gameLoop()
   while true do
     wait(1)
     CGame.cScreen.x, CGame.cScreen.y = getScreenResolution()
-    if CGraphics.wClient[0] then
+    if CGraphics.wClient[0] and not isGamePaused() then
       renderDrawBox(0, 0, CGame.cScreen.x, CGame.cScreen.y, 0xFF000000)
     end
     CGame.disableCharacters()
@@ -88,7 +98,7 @@ function gameLoop()
       if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_ONFOOT then
         if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.05 and not isGamePaused() then
           local x, y, z = getCharCoordinates(PLAYER_PED)
-          if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2]
+          if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2] 
           or z ~= LPlayer.lpPosition[3] or os.clock() - ltSendOnFootSync >= 1.5 then
             LPlayer.updateStats()
             ltSendOnFootSync = os.clock()
@@ -125,8 +135,8 @@ function gameLoop()
           if slot ~= 0 then
             car = GPool.GVehicles[slot]
             local x, y, z = getCarCoordinates(GPool.GVehicles[slot].handle)
-            if x ~= GPool.GVehicles[slot].position[1] or y ~= GPool.GVehicles[slot].position[2]
-            or z ~= GPool.GVehicles[slot].position[3] or os.clock() - ltSendOnFootSync >= 1.5 then
+            if ((x ~= GPool.GVehicles[slot].position[1] or y ~= GPool.GVehicles[slot].position[2] or z ~= GPool.GVehicles[slot].position[3]) 
+            and LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER) or os.clock() - ltSendOnFootSync >= 1.5 then
               LPlayer.updateStats()
               ltSendOnFootSync = os.clock()
               GPool.GVehicles[slot].position = {x, y, z}
@@ -158,7 +168,7 @@ function gameLoop()
                 SLNet.writeFloat(bs, vRoll)
                 SPool.sendPacket(bs)
                 SLNet.deleteBitStream(bs)
-              else
+              else 
                 local bs = SLNet.createBitStream()
                 SLNet.writeInt16(bs, S_PACKETS.INCAR_SYNC)
                 SLNet.writeInt16(bs, GPool.GVehicles[slot].vehicleid)
@@ -183,7 +193,7 @@ end
 function renderNametags()
   local pX, pY, pZ = getCharCoordinates(PLAYER_PED)
   for i = 1, #GPool.GPlayers do
-    if GPool.GPlayers[i].handle and doesCharExist(GPool.GPlayers[i].handle) then
+    if GPool.GPlayers[i].playerid ~= LPlayer.lpPlayerId and GPool.GPlayers[i].handle and doesCharExist(GPool.GPlayers[i].handle) then
       if isCharOnScreen(GPool.GPlayers[i].handle) then
         local rpX, rpY, rpZ = CGame.getBodyPartCoordinates(8, GPool.GPlayers[i].handle)
         local dist = getDistanceBetweenCoords3d(rpX, rpY, rpZ, pX, pY, pZ)
@@ -192,7 +202,7 @@ function renderNametags()
           local wposX, wposY = convert3DCoordsToScreen(rpX, rpY, rpZ + 0.4 + (dist * 0.05))
           local result, colPoint = processLineOfSight(camX, camY, camZ, rpX, rpY, rpZ, true, false, false, true, false, false, false, true)
           if not result then
-            renderFontDrawText(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. i .. ")", wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")") / 2, wposY, 0xFFFFFFFF)
+            renderFontDrawText(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")", wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")") / 2, wposY, 0xFFFFFFFF)                 
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, 100 / 2, 6, 0xFF000000, 1, 0xFF000000)
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, GPool.GPlayers[i].health / 2, 6, 0xFFFF0000, 1, 0x00000000)
             if GPool.GPlayers[i].armour > 0 then
@@ -208,8 +218,33 @@ end
 
 function onWindowMessage(msg, wparam, lparam)
   if msg == 0x100 then
-    if wparam == 0x75 and CGraphics.wChat[0] then
-      CGraphics.tChatOpen = not CGraphics.tChatOpen
+    if CGraphics.wChat[0] then
+      if wparam == 0x75 then
+        CGraphics.tChatOpen = not CGraphics.tChatOpen
+      elseif wparam == 0x1B and CGraphics.tChatOpen then
+        CGraphics.tChatOpen = false
+      elseif wparam == 0x54 and not CGraphics.tChatOpen then
+        CGraphics.tChatOpen = true
+      end
+    end
+    if not CGraphics.tChatOpen and wparam == 0x47 then
+      local data = {-1, -1}
+      local pX, pY, pZ = getCharCoordinates(PLAYER_PED)
+      for i = 1, #GPool.GVehicles do
+        if GPool.GVehicles[i].handle and doesVehicleExist(GPool.GVehicles[i].handle) then
+          local cX, cY, cZ = getCarCoordinates(GPool.GVehicles[i].handle)
+          local dist = getDistanceBetweenCoords3d(cX, cY, cZ, pX, pY, pZ)
+          if dist <= 100.0 then
+            if data[1] == -1 or dist < data[2] then
+              data[2] = dist
+              data[1] = GPool.GVehicles[i].handle
+            end
+          end
+        end
+      end
+      if data[1] ~= -1 then
+        taskEnterCarAsPassenger(PLAYER_PED, data[1], 1000, -1)
+      end
     end
   end
 end
