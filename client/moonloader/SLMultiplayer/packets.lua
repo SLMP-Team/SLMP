@@ -33,6 +33,10 @@ function Packet_Connection_Success(bitStream)
   setPlayerModel(PLAYER_HANDLE, 14)
   markModelAsNoLongerNeeded(14)
   CGraphics.tClientPopupText = 'Connected to server, enjoy playing!'
+  setPlayerControl(PLAYER_HANDLE, true)
+  lockPlayerControl(false)
+  CGraphics.wLockMove[0] = false
+  setCharInterior(PLAYER_PED, 0)
 end
 
 function Packet_OnFoot_Sync(bitStream)
@@ -63,25 +67,36 @@ function Packet_OnFoot_Sync(bitStream)
       SLNet.readFloat(bitStream)
     }
     pData.facingAngle = SLNet.readFloat(bitStream)
+    pData.interior = SLNet.readInt16(bitStream)
   end
   for i = 1, #GPool.GPlayers do
-    if pData.playerid == GPool.GPlayers[i].playerid
+    if pData.playerid == GPool.GPlayers[i].playerid 
     and GPool.GPlayers[i].playerid ~= LPlayer.lpPlayerId then
       local player = GPool.GPlayers[i]
       if not pData.streamedForPlayer and player.handle and doesCharExist(player.handle) then
         deleteChar(player.handle)
         return false
       elseif pData.streamedForPlayer and (not player.handle or not doesCharExist(player.handle) or GPool.GPlayers[i].skin ~= pData.skin) then
-        if player.handle and doesCharExist(player.handle)
-        and GPool.GPlayers[i].skin ~= pData.skin then
-          deleteChar(player.handle)
+        if player.handle and doesCharExist(player.handle) 
+        and GPool.GPlayers[i].skin ~= pData.skin then 
+          deleteChar(player.handle) 
         end
         requestModel(pData.skin)
         loadAllModelsNow()
-        GPool.GPlayers[i].handle = createChar(21, pData.skin, pData.position[1], pData.position[2], pData.position[3])
+        GPool.GPlayers[i].handle = createChar(4, pData.skin, pData.position[1], pData.position[2], pData.position[3])
+        local dec = loadCharDecisionMaker(65543)
+        setCharDecisionMaker(GPool.GPlayers[i].handle, dec)
+        setCharProofs(GPool.GPlayers[i].handle, true, true, true, true, true)
+        setCharDropsWeaponsWhenDead(GPool.GPlayers[i].handle, false)
+        setCharKindaStayInSamePlace(GPool.GPlayers[i].handle, true)
         markModelAsNoLongerNeeded(pData.skin)
         GPool.GPlayers[i].inCar = 0
+        GPool.GPlayers[i].interior = 0
         GPool.GPlayers[i].skin = pData.skin
+      end
+      if GPool.GPlayers[i].interior ~= pData.interior then
+        GPool.GPlayers[i].interior = pData.interior
+        setCharInterior(GPool.GPlayers[i].handle, pData.interior)
       end
       if GPool.GPlayers[i].inCar == 1 then
         taskLeaveAnyCar(GPool.GPlayers[i].handle)
@@ -138,10 +153,11 @@ function Packet_Vehicle_Sync(bitStream)
         setCarRoll(GPool.GVehicles[i].handle, pData.roll)
         setCarHealth(GPool.GVehicles[i].handle, pData.health)
         if isCharInAnyCar(PLAYER_PED) then
-          local carHandle = storeCarCharIsInNoSave(PLAYER_PED)
-          if carHandle == GPool.GVehicles[i].handle then
-            CGame.setVehicleDamagable(GPool.GVehicles[i].handle, true)
-          else CGame.setVehicleDamagable(GPool.GVehicles[i].handle, false) end
+          if GPool.GVehicles[i].handle == storeCarCharIsInNoSave(PLAYER_PED) then
+            if CGame.getVehicleSeat(PLAYER_PED) == 0 then
+              CGame.setVehicleDamagable(GPool.GVehicles[i].handle, true)
+            else CGame.setVehicleDamagable(GPool.GVehicles[i].handle, false) end
+          end
         else CGame.setVehicleDamagable(GPool.GVehicles[i].handle, false) end
       end
       return true
@@ -159,28 +175,30 @@ function Packet_InCar_Sync(bitStream)
     pData.skin = SLNet.readInt16(bitStream)
     pData.vehicleid = SLNet.readInt16(bitStream)
     pData.seatID = SLNet.readInt8(bitStream)
-    pData.health = SLNet.readInt16(bitStream)
     pData.position =
     {
       SLNet.readFloat(bitStream),
       SLNet.readFloat(bitStream),
       SLNet.readFloat(bitStream)
     }
-    pData.quaternion =
-    {
-      SLNet.readFloat(bitStream),
-      SLNet.readFloat(bitStream),
-      SLNet.readFloat(bitStream),
-      SLNet.readFloat(bitStream)
-    }
-    pData.velocity =
-    {
-      SLNet.readFloat(bitStream),
-      SLNet.readFloat(bitStream),
-      SLNet.readFloat(bitStream)
-    }
-    pData.facingAngle = SLNet.readFloat(bitStream)
-    pData.roll = SLNet.readFloat(bitStream)
+    if pData.seatID == 0 then
+      pData.health = SLNet.readInt16(bitStream)
+      pData.quaternion =
+      {
+        SLNet.readFloat(bitStream),
+        SLNet.readFloat(bitStream),
+        SLNet.readFloat(bitStream),
+        SLNet.readFloat(bitStream)
+      }
+      pData.velocity =
+      {
+        SLNet.readFloat(bitStream),
+        SLNet.readFloat(bitStream),
+        SLNet.readFloat(bitStream)
+      }
+      pData.facingAngle = SLNet.readFloat(bitStream)
+      pData.roll = SLNet.readFloat(bitStream)
+    end
   end
 
   local player = -1
@@ -226,17 +244,26 @@ function Packet_InCar_Sync(bitStream)
       end
       requestModel(pData.skin)
       loadAllModelsNow(pData.skin)
-      GPool.GPlayers[player].handle = createChar(21, pData.skin, pData.position[1], pData.position[2], pData.position[3])
+      GPool.GPlayers[player].handle = createChar(4, pData.skin, pData.position[1], pData.position[2], pData.position[3])
+      local dec = loadCharDecisionMaker(65543)
+      setCharDecisionMaker(GPool.GPlayers[player].handle, dec)
+      setCharProofs(GPool.GPlayers[player].handle, true, true, true, true, true)
+      setCharDropsWeaponsWhenDead(GPool.GPlayers[player].handle, false)
+      setCharKindaStayInSamePlace(GPool.GPlayers[player].handle, true)
       markModelAsNoLongerNeeded(pData.skin)
       GPool.GPlayers[player].inCar = 0
       GPool.GPlayers[player].skin = pData.skin
     end
+    if GPool.GPlayers[player].interior ~= 0 then
+      GPool.GPlayers[player].interior = 0
+      setCharInterior(GPool.GPlayers[player].handle, 0)
+    end
     if GPool.GPlayers[player].inCar ~= 1 then
       GPool.GPlayers[player].inCar = 1
-      if pData.seatID < 1 then taskEnterCarAsDriver(GPool.GPlayers[player].handle, GPool.GVehicles[car].handle, 1000)
-      else taskEnterCarAsPassenger(GPool.GPlayers[player].handle, GPool.GVehicles[car].handle, 1000, pData.seatID) end
+      if pData.seatID == 0 then taskEnterCarAsDriver(GPool.GPlayers[player].handle, GPool.GVehicles[car].handle, 1000)
+      else taskEnterCarAsPassenger(GPool.GPlayers[player].handle, GPool.GVehicles[car].handle, 1000, pData.seatID - 1) end
     end
-    if pData.seatID < 1 then
+    if pData.seatID == 0 then
       GPool.GVehicles[car].position = pData.position
       setCarCoordinates(GPool.GVehicles[car].handle, pData.position[1], pData.position[2], pData.position[3])
       setVehicleQuaternion(GPool.GVehicles[car].handle, pData.quaternion[1], pData.quaternion[2], pData.quaternion[3], pData.quaternion[4])
@@ -248,10 +275,11 @@ function Packet_InCar_Sync(bitStream)
       GPool.GPlayers[player].armour = pData.armour
       -- vehicle movespeed function ????
       if isCharInAnyCar(PLAYER_PED) then
-        local carHandle = storeCarCharIsInNoSave(PLAYER_PED)
-        if carHandle == GPool.GVehicles[car].handle then
-          CGame.setVehicleDamagable(GPool.GVehicles[car].handle, true)
-        else CGame.setVehicleDamagable(GPool.GVehicles[car].handle, false) end
+        if GPool.GVehicles[car].handle == storeCarCharIsInNoSave(PLAYER_PED) then
+          if CGame.getVehicleSeat(PLAYER_PED) == 0 then
+            CGame.setVehicleDamagable(GPool.GVehicles[car].handle, true)
+          else CGame.setVehicleDamagable(GPool.GVehicles[car].handle, false) end
+        end
       else CGame.setVehicleDamagable(GPool.GVehicles[car].handle, false) end
     end
   end
@@ -279,10 +307,10 @@ function Packet_Server_Info(bitStream)
 end
 
 function Packet_Disconnect(bitStream)
-  print('kick packet')
   CGraphics.addMessage('Server Closed the Connection.', 0xF5F5F5FF)
   CGraphics.tClientPopupText = 'Server Closed the Connection.'
   CGraphics.addMessage('Use /disconnect to return to menu.', 0xF5F5F5FF)
   SPool.disconnect(1)
+  removeAllServerStuff()
   return true
 end

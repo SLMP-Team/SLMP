@@ -21,8 +21,7 @@ ltSendUnoccupied = os.clock()
 appdataFolder = getFolderPath(0x1C)
 configFolder = appdataFolder..'\\SL-TEAM\\SL-MP'
 if not doesDirectoryExist(configFolder) then
-  createDirectory(appdataFolder..'\\SL-TEAM')
-  createDirectory(appdataFolder..'\\SL-TEAM\\SL-MP')
+  createDirectory(configFolder)
 end
 
 ffi.cdef[[
@@ -102,11 +101,11 @@ function json.updateTable(default_table, fJson)
 	return fJson
 end
 json.load = function(json_file, default_table)
-	if not default_table or type(default_table) ~= 'table' then default_table = {} end
+	if not default_table or type(default_table) ~= 'table' then default_table = {} end 
 	if not json_file or not doesFileExist(json_file) then return false end
 	local fHandle = io.open(json_file, 'r')
 	if not fHandle then return false end
-	local fText = fHandle:read('*all')
+	local fText = fHandle:read('*all') 
 	fHandle:close()
 	if not fText then return false end
 	local fRes, fJson = pcall(decodeJson, fText)
@@ -124,16 +123,16 @@ json.save = function(json_file, lua_table)
 	return true
 end
 
-CConfig =
+CConfig = 
 {
   playerName = 'Kalk0r',
   address = 'localhost:7777'
 }
 
-function checkPlayerState()
+function checkPlayerState() 
   if isCharInAnyCar(PLAYER_PED) then
+    local car = storeCarCharIsInNoSave(PLAYER_PED)
     for i = 1, #GPool.GVehicles do
-      local car = storeCarCharIsInNoSave(PLAYER_PED)
       if GPool.GVehicles[i].handle and GPool.GVehicles[i].handle == car then
         local carSeat = CGame.getVehicleSeat(PLAYER_PED)
         if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_ONFOOT then
@@ -145,15 +144,17 @@ function checkPlayerState()
           SLNet.deleteBitStream(bs)
           ltSendOnFootSync = os.clock() - 0.5
         end
-        if carSeat and carSeat == 0 then
+        if carSeat < 1 then 
           LPlayer.lpPlayerState = S_PLAYERSTATE.PS_DRIVER
-        else LPlayer.lpPlayerState = S_PLAYERSTATE.PS_PASSANGER end
+        else 
+          LPlayer.lpPlayerState = S_PLAYERSTATE.PS_PASSANGER 
+        end
         LPlayer.lpVehicleID = GPool.GVehicles[i].vehicleid
         LPlayer.lpVehicleSeat = tonumber(carSeat)
       end
     end
-  else
-    if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER
+  else 
+    if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER 
     or LPlayer.lpPlayerState == S_PLAYERSTATE.PS_PASSANGER then
       local bs = SLNet.createBitStream()
       SLNet.writeInt16(bs, S_RPC.EXIT_VEHICLE)
@@ -162,6 +163,6 @@ function checkPlayerState()
       SPool.sendRPC(bs)
       SLNet.deleteBitStream(bs)
     end
-    LPlayer.lpPlayerState = S_PLAYERSTATE.PS_ONFOOT
+    LPlayer.lpPlayerState = S_PLAYERSTATE.PS_ONFOOT 
   end
 end

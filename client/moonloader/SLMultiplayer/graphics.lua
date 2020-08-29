@@ -11,7 +11,7 @@ CGraphics =
     tNickname = imgui.new.char[20](),
     tStatusBarPos = scrY,
     tSideBarPos = scrX,
-    tAddress = imgui.new.char[30]()
+    tAddress = imgui.new.char[128]()
   },
   wChat = imgui.new.bool(false),
   ChatSettings =
@@ -22,12 +22,13 @@ CGraphics =
     tChatMessages = {},
     tChatFontSize = 14,
     tChatFontLoaded = true
-  }
+  },
+  wLockMove = imgui.new.bool(false)
 }
 
 IM_FONTS = {}
 IM_WALLPAPER = {}
-imgui.OnInitialize(function()
+imgui.OnInitialize(function() 
   imgui.GetIO().IniFilename = nil
   for i = 1, 6 do
     local tmp = imgui.CreateTextureFromFile(mpFolder .. 'Resources\\Wallpapers\\wall'..i..'.jpg')
@@ -39,14 +40,22 @@ imgui.OnInitialize(function()
 	config.PixelSnapH = true
 	local glyph_ranges = imgui.GetIO().Fonts:GetGlyphRangesCyrillic()
 	imgui.GetIO().Fonts:Clear()
-  imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', 14, nil, glyph_ranges)
+  imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', scrX / 137, nil, glyph_ranges)
   IM_FONTS.TITLE_CLIENT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', scrX * 0.028, nil, glyph_ranges)
   IM_FONTS.SUBTITLE_CLIENT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', scrX * 0.015, nil, glyph_ranges)
   IM_FONTS.TITLE_ICON = imgui.GetIO().Fonts:AddFontFromMemoryCompressedBase85TTF(FA.Solid, 28, nil, imgui.new.ImWchar[3](0xf000, 0xf83e, 0))
   IM_FONTS.INPUT_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', 18, nil, glyph_ranges)
   IM_FONTS.INFO_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', scrX / 96, nil, glyph_ranges)
   IM_FONTS.CHAT_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', CGraphics.ChatSettings.tChatFontSize, nil, glyph_ranges)
-  imgui.InvalidateFontsTexture()
+  imgui.InvalidateFontsTexture()  
+end)
+
+imgui.OnFrame(function() return not isGamePaused() and CGraphics.wLockMove[0] and not CGraphics.wClient[0] end,
+function(self) 
+  self.LockPlayer = true
+  self.HideCursor = true
+  imgui.Begin('##LockWindow', CGraphics.wLockMove, imgui.WindowFlags.NoDecoration + imgui.WindowFlags.NoBackground)
+  imgui.End()
 end)
 
 imgui.OnFrame(function() return not isGamePaused() and CGraphics.wChat[0] end,
@@ -55,7 +64,7 @@ function()
     CGraphics.ChatSettings.tChatFontLoaded = true
     local glyph_ranges = imgui.GetIO().Fonts:GetGlyphRangesCyrillic()
     IM_FONTS.CHAT_FONT = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebuc.ttf', CGraphics.ChatSettings.tChatFontSize, nil, glyph_ranges)
-    imgui.InvalidateFontsTexture()
+    imgui.InvalidateFontsTexture() 
   end
 end,
 function(self)
@@ -86,7 +95,7 @@ function(self)
         imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
         imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y - 1))
         imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), u8(timetag .. CGraphics.ChatSettings.tChatMessages[i].text):gsub('{......}', ''):gsub('{........}', ''))
-
+        
         imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y))
         CGraphics.TextColoredRGB(timetag .. CGraphics.ChatSettings.tChatMessages[i].text)
 			end
@@ -105,6 +114,7 @@ function(self)
     imgui.PushStyleColor(imgui.Col.Text, imgui.ImVec4(72 / 255, 72 / 255, 72 / 255, 1))
     imgui.PushStyleColor(imgui.Col.FrameBg, imgui.ImVec4(219 / 255, 219 / 255, 219 / 255, 1))
     if imgui.InputText("##inputtext", CGraphics.ChatSettings.tChatInput, ffi.sizeof(CGraphics.ChatSettings.tChatInput) - 1, imgui.InputTextFlags.EnterReturnsTrue) then
+      CGraphics.tChatOpen = false
       if ffi.string(CGraphics.ChatSettings.tChatInput):len() > 0 then
         if ffi.string(CGraphics.ChatSettings.tChatInput):match('^/.+') then
           local str = ffi.string(CGraphics.ChatSettings.tChatInput):match('^/(.+)')
@@ -127,7 +137,6 @@ function(self)
           end
         end
         ffi.copy(CGraphics.ChatSettings.tChatInput, '')
-        CGraphics.tChatOpen = false
       end
     end
     imgui.SetKeyboardFocusHere()
@@ -140,7 +149,7 @@ function(self)
 end)
 
 imgui.OnFrame(function() return CGraphics.wClient[0] and not isGamePaused() end,
-function(self)
+function(self) 
   imgui.LockPlayer = true
   imgui.HideCursor = false
   imgui.SetNextWindowPos(imgui.ImVec2(0, 0), imgui.Cond.FirstUseEver, imgui.ImVec2(0.0, 0.0))
@@ -192,13 +201,13 @@ function(self)
 
   drawList:AddRectFilled(imgui.ImVec2(scPos.x, scPos.y), imgui.ImVec2(scPos.x + scrX / 4, scPos.y + scrY / 12), 0xAA17181A, 10.0, imgui.DrawCornerFlags.BotRight)
 
-  imgui.SetCursorPos(imgui.ImVec2(12, 18))
+  imgui.SetCursorPos(imgui.ImVec2(scrX / 160, scrY / 60))
   imgui.PushStyleVarVec2(imgui.StyleVar.FramePadding, imgui.ImVec2(10, 10))
   imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 5.0)
   imgui.PushStyleColor(imgui.Col.Text, imgui.ImVec4(72 / 255, 72 / 255, 72 / 255, 1))
   imgui.PushStyleColor(imgui.Col.FrameBg, imgui.ImVec4(219 / 255, 219 / 255, 219 / 255, 1))
   imgui.PushFont(IM_FONTS.SUBTITLE_CLIENT)
-  imgui.PushItemWidth(scrX / 6)
+  imgui.PushItemWidth(scrX / 4 / 1.5)
   imgui.InputTextWithHint('##nickname', 'Player Name', CGraphics.ClientSettings.tNickname, ffi.sizeof(CGraphics.ClientSettings.tNickname) - 1)
   imgui.PopItemWidth()
   imgui.SameLine()
@@ -221,19 +230,22 @@ function(self)
   imgui.PushStyleColor(imgui.Col.ChildBg, imgui.ImVec4(23 / 255, 24 / 255, 26 / 255, 1))
   imgui.SetCursorPos(imgui.ImVec2(0, CGraphics.ClientSettings.tStatusBarPos))
   if CGraphics.ClientSettings.tStatusBarPos > scrY - 20 then
-    CGraphics.ClientSettings.tStatusBarPos =
+    CGraphics.ClientSettings.tStatusBarPos = 
     CGraphics.ClientSettings.tStatusBarPos - 0.5
   end
   imgui.BeginChild('##statusbar', imgui.ImVec2(scrX, 20))
-  imgui.SetCursorPos(imgui.ImVec2(10, 2))
+  imgui.SetCursorPos(imgui.ImVec2(10, imgui.GetWindowHeight() / 2 - imgui.GetTextLineHeight() / 2))
   imgui.Text(u8(CGraphics.tClientPopupText))
   imgui.EndChild()
-
+  
   imgui.SetCursorPos(imgui.ImVec2(CGraphics.ClientSettings.tSideBarPos, 0))
-  if CGraphics.ClientSettings.tSideBarPos > (scrX - scrX / 4)
+  if CGraphics.ClientSettings.tSideBarPos > (scrX - scrX / 4) 
   and CGraphics.ClientSettings.tStatusBarPos <= scrY - 20 then
     CGraphics.ClientSettings.tSideBarPos =
     CGraphics.ClientSettings.tSideBarPos - 6
+  end
+  if CGraphics.ClientSettings.tSideBarPos < (scrX - scrX / 4) then
+    CGraphics.ClientSettings.tSideBarPos = (scrX - scrX / 4)
   end
   imgui.BeginChild('##sidebar', imgui.ImVec2(scrX / 4, scrY))
 
@@ -289,7 +301,7 @@ function(self)
   imgui.EndGroup()
   imgui.EndChild()
   imgui.PopStyleColor(1)
-
+  
   imgui.Spacing()
   imgui.PushFont(IM_FONTS.SUBTITLE_CLIENT)
   imgui.SetCursorPosX(10)
@@ -321,11 +333,11 @@ function(self)
 end)
 
 CGraphics.addMessage = function(message, color)
-  if type(message) ~= 'string'
+  if type(message) ~= 'string' 
   or type(color) ~= 'number' then
     return false
   end
-  table.insert(CGraphics.ChatSettings.tChatMessages, {text = message, color = color, time = os.time()})
+  table.insert(CGraphics.ChatSettings.tChatMessages, {text = message:sub(1, 128), color = color, time = os.time()})
   CGraphics.ChatSettings.tRefocusNeed = true
 end
 local function split(str, delim, plain)
@@ -357,7 +369,7 @@ CGraphics.TextColoredRGB = function(text, wrapped)
           end
 
           local clr = w:sub(a + 1, b - 1)
-          if clr:upper() == 'STANDART' then
+          if clr:upper() == 'STANDART' then 
             color = imgui.GetStyle().Colors[imgui.Col.Text]
           else
               clr = tonumber(clr, 16)
@@ -418,11 +430,15 @@ function CGraphics.commandsHook(command)
     CGraphics.addMessage('Position saved!', 0xFFFFFFFF)
     return true
   elseif command == 'disconnect' then
+    removeAllServerStuff()
     SPool.disconnect(0)
     CGraphics.wClient[0] = true
     CGraphics.wChat[0] = false
-    removeAllServerStuff()
     LPlayer.lpGameState = S_GAMESTATES.GS_DISCONNECTED
+  elseif command == 'q' or command == 'quit' then
+    os.execute('TASKKILL /IM gta_sa.exe')
+    os.execute('TASKKILL /IM gtasa.exe')
+    return true
   end
   return false
 end

@@ -1,4 +1,4 @@
-SLNet =
+SLNet = 
 {
   BitStreams = {}
 }
@@ -25,7 +25,8 @@ SLNet.createBitStream = function()
     BitStreamID = bsID,
     ReadPointer = 1,
     WritePointer = 1,
-    BytesData = {}
+    BytesData = {},
+    LifeTime = os.time() + 30
   })
   return bsID
 end
@@ -194,7 +195,7 @@ end
 SLNet.writeString = function(bitStream, data)
   bitStream = SLNet.getSlotByID(bitStream)
   local wpoint = SLNet.BitStreams[bitStream].WritePointer
-  local bytes = tostring(data):gsub('\1', '')
+  local bytes = tostring(data):gsub('\\*', '')
   SLNet.BitStreams[bitStream].BytesData[wpoint] =  bytes
   SLNet.BitStreams[bitStream].WritePointer = wpoint + 1
 end
@@ -208,7 +209,7 @@ end
 SLNet.writeStringEncoded = function(bitStream, data, encodeLevel)
   bitStream = SLNet.getSlotByID(bitStream)
   local wpoint = SLNet.BitStreams[bitStream].WritePointer
-  local bytes = tostring(data):gsub('\1', '')
+  local bytes = tostring(data):gsub('\\*', '')
   bytes = LEncoder:CompressDeflate(bytes, {level = encodeLevel})
   SLNet.BitStreams[bitStream].BytesData[wpoint] = tostring(bytes)
   SLNet.BitStreams[bitStream].WritePointer = wpoint + 1

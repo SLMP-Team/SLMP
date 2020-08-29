@@ -26,7 +26,9 @@ S_RPC =
   ENTER_VEHICLE = 10,
   EXIT_VEHICLE = 11,
   CAR_JACKED = 12,
-  SET_PLAYER_SKIN = 13
+  SET_PLAYER_SKIN = 13,
+  PLAYER_CONTROLABLE = 14,
+  SET_PLAYER_INTERIOR = 15
 }
 
 SPool =
@@ -53,6 +55,7 @@ SPool.connect = function()
   udp:settimeout(0)
   udp:setpeername(SPool.sIP, SPool.sPort)
   LPlayer.lpGameState = S_GAMESTATES.GS_CONNECTING
+  removeAllServerStuff()
   local bs = SLNet.createBitStream()
   SLNet.writeInt16(bs, S_PACKETS.CONNECT)
   SLNet.writeString(bs, LPlayer.lpNickname)
@@ -62,7 +65,7 @@ SPool.connect = function()
   SLNet.deleteBitStream(bs)
   ltStartConnectingTime = os.time()
   ltWasConnected = true
-  return
+  return true
 end
 
 SPool.disconnect = function(reason)
@@ -142,6 +145,14 @@ function SPool.onRPCReceive(bitStream)
         SLNet.readFloat(bitStream)
       }
       setCharCoordinates(PLAYER_PED, pData.position[1], pData.position[2], pData.position[3])
+    elseif pID == S_RPC.PLAYER_CONTROLABLE then
+      local canMove = SLNet.readBool(bitStream)
+      setPlayerControl(PLAYER_HANDLE, canMove)
+      lockPlayerControl(not canMove)
+      --CGraphics.wLockMove[0] = not canMove
+    elseif pID == S_RPC.SET_PLAYER_INTERIOR then
+      local interiorid = SLNet.readUInt16(bitStream)
+      setCharInterior(PLAYER_PED, interiorid)
     end
   end
   return true
