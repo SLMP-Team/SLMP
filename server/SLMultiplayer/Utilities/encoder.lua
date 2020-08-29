@@ -148,17 +148,12 @@ function SLEncoder.BytesToFloat(bytes)
   return math.ldexp(mantissa, exponent - 127)
 end
 function SLEncoder.BoolToBytes(bool)
-  if type(bool) ~= 'boolean' then
-    return false
-  end
   return SLEncoder.Uint8ToBytes(bool and 1 or 0)
 end
 function SLEncoder.BytesToBool(bytes)
   if type(bytes) ~= 'string' then
     return false
   end
-  if #bytes == 0 or #bytes > 1 then
-    return false
-  end
-  return not string.byte(bytes) ~= 0
+  bytes = SLEncoder.BytesToUint8(bytes)
+  return bytes == 1
 end

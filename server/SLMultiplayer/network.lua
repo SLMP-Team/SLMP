@@ -26,7 +26,9 @@ S_RPC =
   ENTER_VEHICLE = 10,
   EXIT_VEHICLE = 11,
   CAR_JACKED = 12,
-  SET_PLAYER_SKIN = 13
+  SET_PLAYER_SKIN = 13,
+  PLAYER_CONTROLABLE = 14,
+  SET_PLAYER_INTERIOR = 15
 }
 
 S_PLAYERSTATE =
@@ -73,10 +75,10 @@ SPool.findFreePlayerId = function()
       end
     end
     if not wasID then 
-      findID = true
+      return playerid
     end
   end
-  return playerid
+  return -1
 end
 SPool.findFreeVehicleId = function()
   local vehicleid = 0
@@ -104,12 +106,14 @@ SPool.getClient = function(pAddress, pPort)
       return true, i
     end
   end
-  return false
+  return false, -1
 end
 
 function SPool.onPacketReceive(bitStream, pAddress, pPort)
   local res, ans = pcall(onIncomingPacket, bitStream, pAddress, pPort)
   if res and not ans then return false end
+  SLNet.resetReadPointer(bitStream)
+  SLNet.resetWritePointer(bitStream)
   local connected, clientID = SPool.getClient(pAddress, pPort)
   local pID = SLNet.readInt16(bitStream) or -1
   --print('PACKET' .. pID)
@@ -121,16 +125,16 @@ function SPool.onPacketReceive(bitStream, pAddress, pPort)
     pcall(Packet_OnFoot, bitStream, pAddress, pPort)
   elseif connected and pID == S_PACKETS.INCAR_SYNC then 
     pcall(Packet_InCar, bitStream, pAddress, pPort)
-  elseif connected and pID == S_PACKETS.UNOCCUPIED_SYNC then 
-    pcall(Packet_UnoccupiedSync, bitStream, pAddress, pPort)
+  --[[elseif connected and pID == S_PACKETS.UNOCCUPIED_SYNC then 
+    pcall(Packet_UnoccupiedSync, bitStream, pAddress, pPort)]]
   elseif pID == S_PACKETS.SERVER_INFO then
     local bs = SLNet.createBitStream()
     SLNet.writeInt16(bs, S_PACKETS.SERVER_INFO)
     SLNet.writeString(bs, SConfig.serverName)
     SLNet.writeInt16(bs, #SPool.sPlayers)
     SLNet.writeInt16(bs, SConfig.maxSlots)
-    SLNet.writeString(bs, 'www.sl-mp.com')
-    SLNet.writeString(bs, 'English')
+    SLNet.writeString(bs, SConfig.website)
+    SLNet.writeString(bs, SConfig.language)
     SLNet.writeString(bs, SInfo.sVersion)
     SLNet.writeString(bs, SConfig.gamemodeScript)
     SLNet.writeFloat(bs, SConfig.nametagsDistance)
@@ -146,6 +150,8 @@ end
 function SPool.onRPCReceive(bitStream, pAddress, pPort)
   local res, ans = pcall(onIcomingRPC, bitStream, pAddress, pPort)
   if res and not ans then return false end
+  SLNet.resetReadPointer(bitStream)
+  SLNet.resetWritePointer(bitStream)
   local connected, clientID = SPool.getClient(pAddress, pPort)
   local pID = SLNet.readInt16(bitStream) or -1
   --print('RPC' .. pID)

@@ -16,7 +16,9 @@ SConfig =
   bindAddress = '*',
   bindPort = 7777,
   gamemodeScript = 'gamemode',
-  nametagsDistance = 20.0
+  nametagsDistance = 20.0,
+  language = 'English',
+  website = 'www.sl-mp.com'
 }
 
 local CFile = io.open('../server.cfg', 'r+')
@@ -31,7 +33,10 @@ if CFile then
       streamDistance = 300.0,
       bindAddress = '*',
       bindPort = 7777,
-      gamemodeScript = 'gamemode'
+      gamemodeScript = 'gamemode',
+      nametagsDistance = 20.0,
+      language = 'English',
+      website = 'www.sl-mp.com'
     }
   end
 end
@@ -66,6 +71,13 @@ print('-----------------------------------')
 print(string.format('TOTAL VEHICLES LOADED: %s', #SPool.sVehicles))
 
 while true do
+  for i = #SLNet.BitStreams, 1, -1 do
+    if os.time() >= SLNet.BitStreams[i].LifeTime then
+      print("Lacked BitStream Deleted!")
+      table.remove(SLNet.BitStreams, i)
+    end
+  end
+
   for i = #CTimer.Timers, 1, -1 do
     if os.clock() >= CTimer.Timers[i].time then
       pcall(CTimer.Timers[i].callback, unpack(CTimer.Timers[i].arguments))

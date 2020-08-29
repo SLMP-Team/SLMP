@@ -48,7 +48,8 @@ function createVehicle(model, posX, posY, posZ, color1, color2)
     health = 1000.0,
     roll = 0.0,
     colors = {color1, color2},
-    streamedFor = {}
+    streamedFor = {},
+    virtualWorld = 0
   }
   local bs = SLNet.createBitStream()
   SLNet.writeInt16(bs, S_RPC.CREATE_VEHICLE)
@@ -89,6 +90,7 @@ end
 function setPlayerPos(playerid, posX, posY, posZ)
   for i = 1, #SPool.sPlayers do
     if SPool.sPlayers[i].playerid == playerid then
+      SPool.sPlayers[i].position = {posX, posY, posZ}
       local bs = SLNet.createBitStream()
       SLNet.writeInt16(bs, S_RPC.SET_PLAYER_POS)
       SLNet.writeFloat(bs, posX)
@@ -96,7 +98,6 @@ function setPlayerPos(playerid, posX, posY, posZ)
       SLNet.writeFloat(bs, posZ)
       SPool.sendRPC(bs, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
       SLNet.deleteBitStream(bs)
-      SPool.sPlayers[i].position = {posX, posY, posZ}
       return true
     end
   end
@@ -146,4 +147,86 @@ function kickPlayer(playerid)
     end
   end
   return false
+end
+function getIDbyAddress(clientIP, clientPort)
+  local isConnected, slot = SPool.getClient(tostring(clientIP), tonumber(clientPort))
+  if not isConnected then return -1 end
+  return SPool.sPlayers[slot].playerid
+end
+function setPlayerControlable(playerid, canMove)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      local bs = SLNet.createBitStream()
+      SLNet.writeInt16(bs, S_RPC.PLAYER_CONTROLABLE)
+      SLNet.writeBool(bs, canMove)
+      SPool.sendRPC(bs, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+      SLNet.deleteBitStream(bs)
+      return true
+    end
+  end
+  return false
+end
+function setTimer(timeMS, repeatTimer, callback, ...)
+  local timerid = CTimer.setTimer(timeMS, 
+  repeatTimer, callback, unpack(arg))
+  return timerid
+end
+function killTimer(timerid)
+  return CTimer.killTimer(timerid)
+end
+function setPlayerVirtualWorld(playerid, world)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      SPool.sPlayers[i].virtualWorld = tonumber(world)
+      return true
+    end
+  end
+  return false
+end
+function getPlayerVirtualWorld(playerid)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      return SPool.sPlayers[i].virtualWorld
+    end
+  end
+  return 0
+end
+function setVehicleVirtualWorld(vehicleid, world)
+  for i = 1, #SPool.sVehicles do
+    if SPool.sVehicles[i].vehicleid == vehicleid then
+      SPool.sVehicles[i].virtualWorld = tonumber(world)
+      return true
+    end
+  end
+  return false
+end
+function getVehicleVirtualWorld(vehicleid)
+  for i = 1, #SPool.sVehicles do
+    if SPool.sVehicles[i].vehicleid == vehicleid then
+      return SPool.sVehicles[i].virtualWorld
+    end
+  end
+  return 0
+end
+function setPlayerInterior(playerid, interior)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      SPool.sPlayers[i].interior = tonumber(interior)
+      local bs = SLNet.createBitStream()
+      SLNet.writeInt16(bs, S_RPC.SET_PLAYER_INTERIOR)
+      SLNet.writeUInt16(bs, SPool.sPlayers[i].interior)
+      SPool.sendRPC(bs, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+      SLNet.deleteBitStream(bs)
+      return true
+    end
+  end
+  return false
+end
+function getPlayerInterior(playerid)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      return SPool.sPlayers[i].interior
+    end
+  end
+  return 0
 end

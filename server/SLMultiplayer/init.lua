@@ -6,7 +6,7 @@ udp = socket.udp()
 
 SInfo =
 {
-  sVersion = 'SL:MP 0.0.1-Alpha-R4'
+  sVersion = 'SL:MP 0.0.1-RC5'
 }
 
 local doesFileExist = function(file_path)
@@ -57,6 +57,7 @@ CTimer =
   TimerID = -1
 }
 function CTimer.setTimer(timeMS, repeatTimer, callback, ...)
+	print(unpack(arg))
   CTimer.TimerID = CTimer.TimerID + 1
   local timerid = CTimer.TimerID
   table.insert(CTimer.Timers, {

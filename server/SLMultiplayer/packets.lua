@@ -19,7 +19,7 @@ function Packet_Connect(bitStream, pAddress, pPort)
     SPool.sendPacket(bs, pAddress, pPort)
     SLNet.deleteBitStream(bs)
     return false
-  elseif not pData.nickname:match('^[a-zA-Z0-9]+$') then
+  elseif not pData.nickname:match('^[a-zA-Z0-9_%.]+$') then
     SLNet.writeInt16(bs, S_PACKETS.CONNECTION_FAIL)
     SLNet.writeInt8(bs, 3)
     SPool.sendPacket(bs, pAddress, pPort)
@@ -71,6 +71,8 @@ function Packet_Connect(bitStream, pAddress, pPort)
     health = 100.0,
     armour = 0.0,
     skin = 0,
+    virtualWorld = 0,
+    interior = 0,
     stream = 
     {
       players = {}, 
@@ -114,6 +116,7 @@ function Packet_Connect(bitStream, pAddress, pPort)
   SLNet.deleteBitStream(bs)
   print(string.format('[PLAYER] %s [%s:%s:%s] connected to server', pData.nickname, pAddress, pPort, playerid))
   pcall(onPlayerConnect, playerid)
+  pcall(onPlayerSpawn, playerid)
   return true
 end
 
@@ -157,6 +160,7 @@ function Packet_OnFoot(bitStream, pAddress, pPort)
   SPool.sPlayers[clientID].facingAngle = pData.facingAngle
 
   for i = 1, #SPool.sVehicles do
+    local oneWorld = (SPool.sVehicles[i].virtualWorld == SPool.sPlayers[clientID].virtualWorld)
     local dist = getDistBetweenPoints(pData.position[1], pData.position[2], pData.position[3],
     SPool.sVehicles[i].position[1], SPool.sVehicles[i].position[2], SPool.sVehicles[i].position[3])
     local wereStreamed = false
@@ -169,7 +173,7 @@ function Packet_OnFoot(bitStream, pAddress, pPort)
 
     local bs = SLNet.createBitStream()
     SLNet.writeInt16(bs, S_PACKETS.VEHICLES_SYNC)
-    if dist > SConfig.streamDistance and wereStreamed then
+    if (dist > SConfig.streamDistance or not oneWorld) and wereStreamed then
       SLNet.writeInt16(bs, SPool.sVehicles[i].vehicleid)
       SLNet.writeBool(bs, false)
       SPool.sendPacket(bs, pAddress, pPort)
@@ -178,7 +182,7 @@ function Packet_OnFoot(bitStream, pAddress, pPort)
           table.remove(SPool.sVehicles[i].streamedFor, ii)
         end
       end
-    elseif dist <= SConfig.streamDistance and not wereStreamed then
+    elseif dist <= SConfig.streamDistance and oneWorld and not wereStreamed then
       SLNet.writeInt16(bs, SPool.sVehicles[i].vehicleid)
       SLNet.writeBool(bs, true)
       SLNet.writeFloat(bs, SPool.sVehicles[i].position[1])
@@ -201,7 +205,8 @@ function Packet_OnFoot(bitStream, pAddress, pPort)
     if SPool.sPlayers[clientID].playerid ~= SPool.sPlayers[i].playerid then
       local dist = getDistBetweenPoints(pData.position[1], pData.position[2], pData.position[3],
       SPool.sPlayers[i].position[1], SPool.sPlayers[i].position[2], SPool.sPlayers[i].position[3])
-      if dist > SConfig.streamDistance then
+      local oneWorld = (SPool.sPlayers[i].virtualWorld == SPool.sPlayers[clientID].virtualWorld)
+      if dist > SConfig.streamDistance or not oneWorld then
         local wereStreamed = false
         for ii = #SPool.sPlayers[i].stream.players, 1, -1 do
           if SPool.sPlayers[i].stream.players[ii] == SPool.sPlayers[clientID].playerid then
@@ -237,6 +242,7 @@ function Packet_OnFoot(bitStream, pAddress, pPort)
         SLNet.writeFloat(bs, pData.velocity[2])
         SLNet.writeFloat(bs, pData.velocity[3])
         SLNet.writeFloat(bs, pData.facingAngle)
+        SLNet.writeInt16(bs, SPool.sPlayers[clientID].interior)
         SPool.sendPacket(bs, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
         SLNet.deleteBitStream(bs)
         local wereStreamed = false
@@ -298,9 +304,10 @@ function Packet_UnoccupiedSync(bitStream, pAddress, pPort)
 
   for i = 1, #SPool.sPlayers do
     if i ~= clientID then
+      local oneWorld = (SPool.sVehicles[car].virtualWorld == SPool.sPlayers[i].virtualWorld)
       local dist = getDistBetweenPoints(pData.position[1], pData.position[2], pData.position[3],
       SPool.sPlayers[i].position[1], SPool.sPlayers[i].position[2], SPool.sPlayers[i].position[3])
-      if dist <= SConfig.streamDistance then
+      if dist <= SConfig.streamDistance and oneWorld then
         local bs = SLNet.createBitStream()
         SLNet.writeInt16(bs, S_PACKETS.UNOCCUPIED_SYNC)
         SLNet.writeInt16(bs, pData.vehicleid)
@@ -341,7 +348,8 @@ function Packet_InCar(bitStream, pAddress, pPort)
     SLNet.readFloat(bitStream),
     SLNet.readFloat(bitStream)
   }
-  if pData.seatID < 1 then
+  --print(pData.seatID)
+  if pData.seatID == 0 then
     pData.health = SLNet.readInt16(bitStream)
     pData.quaternion = 
     {
@@ -379,6 +387,7 @@ function Packet_InCar(bitStream, pAddress, pPort)
   SPool.sVehicles[car].health = pData.health
 
   for i = 1, #SPool.sVehicles do
+    local oneWorld = (SPool.sVehicles[i].virtualWorld == SPool.sPlayers[clientID].virtualWorld)
     local dist = getDistBetweenPoints(pData.position[1], pData.position[2], pData.position[3],
     SPool.sVehicles[i].position[1], SPool.sVehicles[i].position[2], SPool.sVehicles[i].position[3])
     local wereStreamed = false
@@ -391,7 +400,7 @@ function Packet_InCar(bitStream, pAddress, pPort)
 
     local bs = SLNet.createBitStream()
     SLNet.writeInt16(bs, S_PACKETS.VEHICLES_SYNC)
-    if dist > SConfig.streamDistance and wereStreamed then
+    if (dist > SConfig.streamDistance or not oneWorld) and wereStreamed then
       SLNet.writeInt16(bs, SPool.sVehicles[i].vehicleid)
       SLNet.writeBool(bs, false)
       SPool.sendPacket(bs, pAddress, pPort)
@@ -400,7 +409,7 @@ function Packet_InCar(bitStream, pAddress, pPort)
           table.remove(SPool.sVehicles[i].streamedFor, ii)
         end
       end
-    elseif dist <= SConfig.streamDistance and not wereStreamed then
+    elseif dist <= SConfig.streamDistance and oneWorld and not wereStreamed then
       SLNet.writeInt16(bs, SPool.sVehicles[i].vehicleid)
       SLNet.writeBool(bs, true)
       SLNet.writeFloat(bs, SPool.sVehicles[i].position[1])
@@ -422,9 +431,10 @@ function Packet_InCar(bitStream, pAddress, pPort)
   for i = 1, #SPool.sPlayers do
     if SPool.sPlayers[clientID].playerid ~= SPool.sPlayers[i].playerid then
 
+      local oneWorld = (SPool.sPlayers[i].virtualWorld == SPool.sPlayers[clientID].virtualWorld)
       local dist = getDistBetweenPoints(pData.position[1], pData.position[2], pData.position[3],
       SPool.sPlayers[i].position[1], SPool.sPlayers[i].position[2], SPool.sPlayers[i].position[3])
-      if dist > SConfig.streamDistance then
+      if dist > SConfig.streamDistance or not oneWorld then
         local wereStreamed = false
         for ii = #SPool.sPlayers[i].stream.players, 1, -1 do
           if SPool.sPlayers[i].stream.players[ii] == SPool.sPlayers[clientID].playerid then
@@ -451,19 +461,21 @@ function Packet_InCar(bitStream, pAddress, pPort)
         SLNet.writeInt16(bs, SPool.sPlayers[clientID].skin)
         SLNet.writeInt16(bs, pData.vehicleid)
         SLNet.writeInt8(bs, pData.seatID)
-        SLNet.writeInt16(bs, pData.health)
         SLNet.writeFloat(bs, pData.position[1])
         SLNet.writeFloat(bs, pData.position[2])
         SLNet.writeFloat(bs, pData.position[3])
-        SLNet.writeFloat(bs, pData.quaternion[1])
-        SLNet.writeFloat(bs, pData.quaternion[2])
-        SLNet.writeFloat(bs, pData.quaternion[3])
-        SLNet.writeFloat(bs, pData.quaternion[4])
-        SLNet.writeFloat(bs, pData.velocity[1])
-        SLNet.writeFloat(bs, pData.velocity[2])
-        SLNet.writeFloat(bs, pData.velocity[3])
-        SLNet.writeFloat(bs, pData.facingAngle)
-        SLNet.writeFloat(bs, pData.roll)
+        if pData.seatID == 0 then
+          SLNet.writeInt16(bs, pData.health)
+          SLNet.writeFloat(bs, pData.quaternion[1])
+          SLNet.writeFloat(bs, pData.quaternion[2])
+          SLNet.writeFloat(bs, pData.quaternion[3])
+          SLNet.writeFloat(bs, pData.quaternion[4])
+          SLNet.writeFloat(bs, pData.velocity[1])
+          SLNet.writeFloat(bs, pData.velocity[2])
+          SLNet.writeFloat(bs, pData.velocity[3])
+          SLNet.writeFloat(bs, pData.facingAngle)
+          SLNet.writeFloat(bs, pData.roll)
+        end
         SPool.sendPacket(bs, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
         SLNet.deleteBitStream(bs)
         local wereStreamed = false
