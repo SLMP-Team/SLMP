@@ -74,6 +74,26 @@ function onPlayerCommand(playerid, command)
   sendClientMessage(playerid, '{FF0000}Неизвестная команда! {FFFFFF}Введите /help для помощи.', 0xFFFFFFFF)
 end
 
+function onPlayerUpdate(playerid)
+
+end
+
+function onPlayerStreamOut(playerid, forplayerid)
+
+end
+
+function onPlayerStreamIn(playerid, forplayerid)
+
+end
+
+function onVehicleStreamOut(vehicleid, forplayerid)
+
+end
+
+function onVehicleStreamIn(vehicleid, forplayerid)
+
+end
+
 function onIncomingPacket(bitStream, clientIP, clientPort)
   -- ПРИМЕР ИСПОЛЬЗОВАНИЯ (ПСЕВДО-АНТИЧИТ НА ТЕЛЕПОРТ)
   local packetID = SLNet.readInt16(bitStream)
