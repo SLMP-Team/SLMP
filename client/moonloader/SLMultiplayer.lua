@@ -29,7 +29,7 @@ end
 
 CConfig = json.load(configFolder .. '\\client.json', CConfig)
 if type(CConfig) ~= 'table' then
-  CConfig = 
+  CConfig =
   {
     playerName = 'Kalk0r',
     address = 'localhost:7777'
@@ -41,7 +41,7 @@ ffi.copy(CGraphics.ClientSettings.tAddress, u8(CConfig.address))
 
 function main()
   print("SL:MP initialization proccess complited")
-  
+
   setCharCoordinates(PLAYER_PED, 0.0, 0.0, 0.0)
   CGame.workInPause()
   displayCarNames(false)
@@ -63,13 +63,13 @@ function main()
   CGame.disableVehicles()
 
   setPlayerDisplayVitalStatsButton(PLAYER_HANDLE, false)
-  
+
   GPool.clearPool()
   LPlayer.updateStats()
 
   lua_thread.create(gameLoop)
   lua_thread.create(networkLoop)
-  lua_thread.create(function() 
+  lua_thread.create(function()
     while true do
       wait(5000)
       for i = #SLNet.BitStreams, 1, -1 do
@@ -80,6 +80,8 @@ function main()
       end
     end
   end)
+  lua_thread.create(CGame.hookPickupCollected)
+  lua_thread.create(CGame.weaponSync)
 end
 
 function gameLoop()
@@ -95,10 +97,21 @@ function gameLoop()
     if LPlayer.lpGameState == S_GAMESTATES.GS_CONNECTED then
       checkPlayerState()
 
+      for i = 1, #GPool.GVehicles do
+        CGame.setVehicleDamagable(GPool.GVehicles[i].handle, false)
+        if isCharInAnyCar(PLAYER_PED) then
+          if GPool.GVehicles[i].handle == storeCarCharIsInNoSave(PLAYER_PED) then
+            if CGame.getVehicleSeat(PLAYER_PED) == 0 then
+              CGame.setVehicleDamagable(GPool.GVehicles[i].handle, true)
+            end
+          end
+        end
+      end
+
       if LPlayer.lpPlayerState == S_PLAYERSTATE.PS_ONFOOT then
-        if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.05 and not isGamePaused() then
+        if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.03 and not isGamePaused() then
           local x, y, z = getCharCoordinates(PLAYER_PED)
-          if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2] 
+          if x ~= LPlayer.lpPosition[1] or y ~= LPlayer.lpPosition[2]
           or z ~= LPlayer.lpPosition[3] or os.clock() - ltSendOnFootSync >= 1.5 then
             LPlayer.updateStats()
             ltSendOnFootSync = os.clock()
@@ -124,7 +137,7 @@ function gameLoop()
           end
         end
       elseif LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER or LPlayer.lpPlayerState == S_PLAYERSTATE.PS_PASSANGER then
-        if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.1 and not isGamePaused() then
+        if ltSendOnFootSync and os.clock() - ltSendOnFootSync >= 0.03 and not isGamePaused() then
           local car, slot = storeCarCharIsInNoSave(PLAYER_PED), 0
           for i = 1, #GPool.GVehicles do
             if GPool.GVehicles[i].handle and GPool.GVehicles[i].handle == car then
@@ -135,7 +148,7 @@ function gameLoop()
           if slot ~= 0 then
             car = GPool.GVehicles[slot]
             local x, y, z = getCarCoordinates(GPool.GVehicles[slot].handle)
-            if ((x ~= GPool.GVehicles[slot].position[1] or y ~= GPool.GVehicles[slot].position[2] or z ~= GPool.GVehicles[slot].position[3]) 
+            if ((x ~= GPool.GVehicles[slot].position[1] or y ~= GPool.GVehicles[slot].position[2] or z ~= GPool.GVehicles[slot].position[3])
             and LPlayer.lpPlayerState == S_PLAYERSTATE.PS_DRIVER) or os.clock() - ltSendOnFootSync >= 1.5 then
               LPlayer.updateStats()
               ltSendOnFootSync = os.clock()
@@ -168,7 +181,7 @@ function gameLoop()
                 SLNet.writeFloat(bs, vRoll)
                 SPool.sendPacket(bs)
                 SLNet.deleteBitStream(bs)
-              else 
+              else
                 local bs = SLNet.createBitStream()
                 SLNet.writeInt16(bs, S_PACKETS.INCAR_SYNC)
                 SLNet.writeInt16(bs, GPool.GVehicles[slot].vehicleid)
@@ -185,7 +198,9 @@ function gameLoop()
           end
         end
       end
-      renderNametags()
+      if not isGamePaused then
+        renderNametags()
+      end
     end
   end
 end
@@ -202,7 +217,7 @@ function renderNametags()
           local wposX, wposY = convert3DCoordsToScreen(rpX, rpY, rpZ + 0.4 + (dist * 0.05))
           local result, colPoint = processLineOfSight(camX, camY, camZ, rpX, rpY, rpZ, true, false, false, true, false, false, false, true)
           if not result then
-            renderFontDrawText(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")", wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")") / 2, wposY, 0xFFFFFFFF)                 
+            renderFontDrawText(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")", wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")") / 2, wposY, 0xFFFFFFFF)
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, 100 / 2, 6, 0xFF000000, 1, 0xFF000000)
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, GPool.GPlayers[i].health / 2, 6, 0xFFFF0000, 1, 0x00000000)
             if GPool.GPlayers[i].armour > 0 then
@@ -234,7 +249,7 @@ function onWindowMessage(msg, wparam, lparam)
         if GPool.GVehicles[i].handle and doesVehicleExist(GPool.GVehicles[i].handle) then
           local cX, cY, cZ = getCarCoordinates(GPool.GVehicles[i].handle)
           local dist = getDistanceBetweenCoords3d(cX, cY, cZ, pX, pY, pZ)
-          if dist <= 100.0 then
+          if dist <= 80.0 then
             if data[1] == -1 or dist < data[2] then
               data[2] = dist
               data[1] = GPool.GVehicles[i].handle
@@ -243,7 +258,7 @@ function onWindowMessage(msg, wparam, lparam)
         end
       end
       if data[1] ~= -1 then
-        taskEnterCarAsPassenger(PLAYER_PED, data[1], 1000, -1)
+        taskEnterCarAsPassenger(PLAYER_PED, data[1], 5000, -1)
       end
     end
   end
@@ -268,10 +283,18 @@ function removeAllServerStuff()
     if GPool.GPlayers[i].handle and doesCharExist(GPool.GPlayers[i].handle) then
       deleteChar(GPool.GPlayers[i].handle)
     end
+    table.remove(GPool.GPlayers, i)
   end
   for i = #GPool.GVehicles, 1, -1 do
     if GPool.GVehicles[i].handle and doesVehicleExist(GPool.GVehicles[i].handle) then
       deleteCar(GPool.GVehicles[i].handle)
     end
+    table.remove(GPool.GVehicles, i)
+  end
+  for i = #GPool.GPickups, 1, -1 do
+    if GPool.GPickups[i].handle and doesPickupExist(GPool.GPickups[i].handle) then
+      removePickup(GPool.GPickups[i].handle)
+    end
+    table.remove(GPool.GPickups, i)
   end
 end
