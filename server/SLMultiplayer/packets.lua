@@ -189,6 +189,7 @@ function Packet_OnFoot(bitStream, pAddress, pPort)
         for ii = #SPool.sPlayers[i].stream.players, 1, -1 do
           if SPool.sPlayers[i].stream.players[ii] == SPool.sPlayers[clientID].playerid then
             wereStreamed = true
+            pcall(onPlayerStreamOut, SPool.sPlayers[clientID].playerid, SPool.sPlayers[i].playerid)
             table.remove(SPool.sPlayers[i].stream.players, ii)
             break
           end
@@ -232,10 +233,12 @@ function Packet_OnFoot(bitStream, pAddress, pPort)
         end
         if not wereStreamed then
           table.insert(SPool.sPlayers[i].stream.players, SPool.sPlayers[clientID].playerid)
+          pcall(onPlayerStreamIn, SPool.sPlayers[clientID].playerid, SPool.sPlayers[i].playerid)
         end
       end
     end
   end
+  pcall(onPlayerUpdate, SPool.sPlayers[clientID].playerid)
   return true
 end
 
@@ -383,6 +386,7 @@ function Packet_InCar(bitStream, pAddress, pPort)
         for ii = #SPool.sPlayers[i].stream.players, 1, -1 do
           if SPool.sPlayers[i].stream.players[ii] == SPool.sPlayers[clientID].playerid then
             wereStreamed = true
+            pcall(onPlayerStreamOut, SPool.sPlayers[clientID].playerid, SPool.sPlayers[i].playerid)
             table.remove(SPool.sPlayers[i].stream.players, ii)
             break
           end
@@ -431,12 +435,13 @@ function Packet_InCar(bitStream, pAddress, pPort)
         end
         if not wereStreamed then
           table.insert(SPool.sPlayers[i].stream.players, SPool.sPlayers[clientID].playerid)
+          pcall(onPlayerStreamIn, SPool.sPlayers[clientID].playerid, SPool.sPlayers[i].playerid)
         end
       end
 
     end
   end
-
+  pcall(onPlayerUpdate, SPool.sPlayers[clientID].playerid)
   return true
 end
 
@@ -499,6 +504,7 @@ function Packet_Vehicle_Sync(pData, clientID, pAddress, pPort)
       SPool.sendPacket(bs, pAddress, pPort)
       for ii = #SPool.sVehicles[i].streamedFor, 1, -1 do
         if SPool.sVehicles[i].streamedFor[ii] == SPool.sPlayers[clientID].playerid then
+          pcall(onVehicleStreamOut, SPool.sVehicles[i].vehicleid, SPool.sPlayers[i].playerid)
           table.remove(SPool.sVehicles[i].streamedFor, ii)
         end
       end
@@ -517,6 +523,7 @@ function Packet_Vehicle_Sync(pData, clientID, pAddress, pPort)
       SLNet.writeInt16(bs, SPool.sVehicles[i].health)
       SPool.sendPacket(bs, pAddress, pPort)
       table.insert(SPool.sVehicles[i].streamedFor, SPool.sPlayers[clientID].playerid)
+      pcall(onVehicleStreamIn, SPool.sVehicles[i].vehicleid, SPool.sPlayers[i].playerid)
     end
     SLNet.deleteBitStream(bs)
   end
