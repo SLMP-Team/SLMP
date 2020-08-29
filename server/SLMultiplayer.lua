@@ -73,7 +73,6 @@ print(string.format('TOTAL VEHICLES LOADED: %s', #SPool.sVehicles))
 while true do
   for i = #SLNet.BitStreams, 1, -1 do
     if os.time() >= SLNet.BitStreams[i].LifeTime then
-      print("Lacked BitStream Deleted!")
       table.remove(SLNet.BitStreams, i)
     end
   end

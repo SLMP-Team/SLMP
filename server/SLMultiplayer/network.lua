@@ -150,6 +150,15 @@ SPool.isPlayerStreamedForPlayer = function(playerid, forplayerid)
   end
 end
 
+SPool.isValidVehicle = function(vehicleid)
+  for i = 1, #SPool.sVehicles do
+    if SPool.sVehicles[i].vehicleid == vehicleid then
+      return true
+    end
+  end
+  return false
+end
+
 function SPool.onPacketReceive(bitStream, pAddress, pPort)
   local res, ans = pcall(onIncomingPacket, bitStream, pAddress, pPort)
   if res and not ans then return false end
@@ -218,24 +227,44 @@ function SPool.onRPCReceive(bitStream, pAddress, pPort)
     local pData = {}
     pData.vehicleid = SLNet.readInt16(bitStream)
     pData.seatID = SLNet.readInt8(bitStream)
-    local bs = SLNet.createBitStream()
-    SLNet.writeInt16(bs, S_RPC.CAR_JACKED)
-    SLNet.writeInt16(bs, pData.vehicleid)
-    for i = 1, #SPool.sPlayers do
-      if clientID ~= i and SPool.sPlayers[i].vehicleID == pData.vehicleid
-      and SPool.sPlayers[i].vehicleSeatID == pData.seatID then
-        SPool.sPlayers[i].vehicleID = 0
-        SPool.sPlayers[i].vehicleSeatID = 0
-        SPool.sPlayers[i].playerState = S_PLAYERSTATE.PS_ONFOOT
-        SPool.sendRPC(bs, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+    if SPool.isValidVehicle(pData.vehicleid) then
+      local car = -1
+      for i = 1, #SPool.sVehicles do
+        if SPool.sVehicles[i].vehicleid == pData.vehicleid then
+          car = i
+          break
+        end
+      end
+
+      local dist = getDistBetweenPoints(SPool.sPlayers[clientID].position[1], SPool.sPlayers[clientID].position[2],
+      SPool.sPlayers[clientID].position[3], SPool.sVehicles[car].position[1], SPool.sVehicles[car].position[2], SPool.sVehicles[car].position[3])
+
+      if dist <= 150.0 then
+        local bs = SLNet.createBitStream()
+        SLNet.writeInt16(bs, S_RPC.CAR_JACKED)
+        SLNet.writeInt16(bs, pData.vehicleid)
+        for i = 1, #SPool.sPlayers do
+          if clientID ~= i and SPool.sPlayers[i].vehicleID == pData.vehicleid
+          and SPool.sPlayers[i].vehicleSeatID == pData.seatID then
+            SPool.sPlayers[i].vehicleID = 0
+            SPool.sPlayers[i].vehicleSeatID = 0
+            SPool.sPlayers[i].playerState = S_PLAYERSTATE.PS_ONFOOT
+            SPool.sendRPC(bs, SPool.sPlayers[i].bindedIP, SPool.sPlayers[i].bindedPort)
+          end
+        end
+        SLNet.deleteBitStream(bs)
+
+        SPool.sPlayers[clientID].playerState = (pData.seatID == 0 and S_PLAYERSTATE.PS_DRIVER or S_PLAYERSTATE.PS_PASSANGER)
+        SPool.sPlayers[clientID].vehicleID = pData.vehicleid
+        SPool.sPlayers[clientID].vehicleSeatID = pData.seatID
+        pcall(onPlayerEnterVehicle, SPool.sPlayers[clientID].playerid, pData.vehicleid, pData.seatID)
       end
     end
-    SLNet.deleteBitStream(bs)
-    SPool.sPlayers[clientID].playerState = (pData.seatID == 0 and S_PLAYERSTATE.PS_DRIVER or S_PLAYERSTATE.PS_PASSANGER)
-    SPool.sPlayers[clientID].vehicleID = pData.vehicleid
-    SPool.sPlayers[clientID].vehicleSeatID = pData.seatID
   elseif connected and pID == S_RPC.EXIT_VEHICLE then
     SPool.sPlayers[clientID].playerState = S_PLAYERSTATE.PS_ONFOOT
+    if SPool.isValidVehicle(SPool.sPlayers[clientID].vehicleID) then
+      pcall(onPlayerExitVehicle, SPool.sPlayers[clientID].playerid, SPool.sPlayers[clientID].vehicleID)
+    end
     SPool.sPlayers[clientID].vehicleID = 0
     SPool.sPlayers[clientID].vehicleSeatID = 0
   elseif connected and pID == S_RPC.PLAYER_PICK_PICKUP then

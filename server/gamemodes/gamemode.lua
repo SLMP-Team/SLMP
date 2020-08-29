@@ -94,6 +94,14 @@ function onVehicleStreamIn(vehicleid, forplayerid)
 
 end
 
+function onPlayerEnterVehicle(playerid, vehicleid, seatid)
+
+end
+
+function onPlayerExitVehicle(playerid, vehicleid)
+
+end
+
 function onIncomingPacket(bitStream, clientIP, clientPort)
   -- опхлеп хяонкэгнбюмхъ (ояебдн-юмрхвхр мю рекеонпр)
   local packetID = SLNet.readInt16(bitStream)

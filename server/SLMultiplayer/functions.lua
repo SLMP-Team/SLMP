@@ -300,3 +300,6 @@ function resetWeapons(playerid)
   end
   return false
 end
+function isValidVehicle(vehicleid)
+  return SPool.isValidVehicle(vehicleid)
+end
