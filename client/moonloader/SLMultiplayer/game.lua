@@ -1,4 +1,4 @@
-CGame = 
+CGame =
 {
   cVersion = 'SL:MP 0.0.1-Alpha-R4',
   cScreen = {x = 0, y = 0}
@@ -28,6 +28,9 @@ CGame.setGamestate = function(gamestate)
 end
 CGame.disableBlurEffect = function()
   pcall(memory.fill, 0x704E8A, 0x90, 5, true)
+end
+CGame.disableBlueFog = function()
+  pcall(memory.fill, 0x00575B0E, 0x90, 5, true)
 end
 CGame.disableCheats = function()
   pcall(memory.write, 0x4384D0, 0x9090, 2)
@@ -67,7 +70,7 @@ CGame.disableAllFuckingCity = function()
   switchAmbientPlanes(false) -- disable air traffic
 end
 CGame.workInPause = function()
-  memory.setuint8(7634870, 1) 
+  memory.setuint8(7634870, 1)
   memory.setuint8(7635034, 1)
   memory.fill(7623723, 144, 8)
   memory.fill(5499528, 144, 6)

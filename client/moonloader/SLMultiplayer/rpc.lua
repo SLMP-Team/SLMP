@@ -7,7 +7,7 @@ function RPC_CreateVehicle(bitStream)
     SLNet.readInt16(bitStream)
   }
   local slot = #GPool.GVehicles + 1
-  GPool.GVehicles[slot] = 
+  GPool.GVehicles[slot] =
   {
     vehicleid = pData.vehicleid,
     model = pData.model,
