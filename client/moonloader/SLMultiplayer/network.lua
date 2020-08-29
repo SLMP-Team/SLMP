@@ -8,7 +8,9 @@ S_PACKETS =
   CONNECTION_SUCCESS = 5,
   INCAR_SYNC = 6,
   VEHICLES_SYNC = 7,
-  UNOCCUPIED_SYNC = 8
+  UNOCCUPIED_SYNC = 8,
+  PICKUPS_SYNC = 9,
+  WEAPONS_SYNC = 10
 }
 
 S_RPC =
@@ -27,8 +29,13 @@ S_RPC =
   EXIT_VEHICLE = 11,
   CAR_JACKED = 12,
   SET_PLAYER_SKIN = 13,
-  PLAYER_CONTROLABLE = 14,
-  SET_PLAYER_INTERIOR = 15
+  PLAYER_CONTROLLABLE = 14,
+  SET_PLAYER_INTERIOR = 15,
+  CREATE_PICKUP = 16,
+  DESTROY_PICKUP = 17,
+  PLAYER_PICK_PICKUP = 18,
+  GIVE_WEAPON = 19,
+  RESET_WEAPONS = 20
 }
 
 SPool =
@@ -132,10 +139,11 @@ function SPool.onRPCReceive(bitStream)
     elseif pID == S_RPC.SET_PLAYER_SKIN then
       local pData = {}
       pData.skin = SLNet.readInt16(bitStream)
-      requestModel(pData.skin)
+      --[[requestModel(pData.skin)
       loadAllModelsNow()
       setPlayerModel(PLAYER_HANDLE, pData.skin)
-      markModelAsNoLongerNeeded(pData.skin)
+      markModelAsNoLongerNeeded(pData.skin)]]
+      lua_thread.create(CGame.setPlayerSkin, pData.skin)
     elseif pID == S_RPC.SET_PLAYER_POS then
       local pData = {}
       pData.position =
@@ -145,7 +153,7 @@ function SPool.onRPCReceive(bitStream)
         SLNet.readFloat(bitStream)
       }
       setCharCoordinates(PLAYER_PED, pData.position[1], pData.position[2], pData.position[3])
-    elseif pID == S_RPC.PLAYER_CONTROLABLE then
+    elseif pID == S_RPC.PLAYER_CONTROLLABLE then
       local canMove = SLNet.readBool(bitStream)
       setPlayerControl(PLAYER_HANDLE, canMove)
       lockPlayerControl(not canMove)
@@ -153,6 +161,21 @@ function SPool.onRPCReceive(bitStream)
     elseif pID == S_RPC.SET_PLAYER_INTERIOR then
       local interiorid = SLNet.readUInt16(bitStream)
       setCharInterior(PLAYER_PED, interiorid)
+    elseif pID == S_RPC.CREATE_PICKUP then
+      pcall(RPC_CreatePickup, bitStream)
+    elseif pID == S_RPC.DESTROY_PICKUP then
+      pcall(RPC_DestroyPickup, bitStream)
+    elseif pID == S_RPC.RESET_WEAPONS then
+      removeAllCharWeapons(PLAYER_PED)
+    elseif pID == S_RPC.GIVE_WEAPON then
+      local weapid = SLNet.readInt8(bitStream)
+      local ammo = SLNet.readUInt16(bitStream)
+      local weaponModel = getWeapontypeModel(weapid)
+      requestModel(weaponModel)
+      loadAllModelsNow()
+      giveWeaponToChar(PLAYER_PED, weapid, ammo)
+      setCurrentCharWeapon(PLAYER_PED, weapid)
+      markModelAsNoLongerNeeded(weaponModel)
     end
   end
   return true
@@ -177,6 +200,10 @@ function SPool.onPacketReceive(bitStream)
       pcall(Packet_InCar_Sync, bitStream)
     elseif pID == S_PACKETS.VEHICLES_SYNC then
       pcall(Packet_Vehicle_Sync, bitStream)
+    elseif pID == S_PACKETS.PICKUPS_SYNC then
+      pcall(Packet_Pickups_Sync, bitStream)
+    elseif pID == S_PACKETS.WEAPONS_SYNC then
+      pcall(Packet_Weapons_Sync, bitStream)
     end
   end
   return true

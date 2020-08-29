@@ -1,6 +1,6 @@
-CGame = 
+CGame =
 {
-  cVersion = 'SL:MP 0.0.1-RC5',
+  cVersion = 'SL:MP 0.0.1-RC6',
   cScreen = {x = 0, y = 0}
 }
 CGame.cScreen.x, CGame.cScreen.y = getScreenResolution()
@@ -70,7 +70,7 @@ CGame.disableAllFuckingCity = function()
   switchAmbientPlanes(false) -- disable air traffic
 end
 CGame.workInPause = function()
-  memory.setuint8(7634870, 1) 
+  memory.setuint8(7634870, 1)
   memory.setuint8(7635034, 1)
   memory.fill(7623723, 144, 8)
   memory.fill(5499528, 144, 6)
@@ -80,7 +80,7 @@ CGame.getVehicleSeat = function(ped)
   if doesCharExist(ped) and isCharInAnyCar(ped) then
     local car = storeCarCharIsInNoSave(ped)
     for i = 0, getMaximumNumberOfPassengers(car) - 1 do
-      if not isCarPassengerSeatFree(car, i) 
+      if not isCarPassengerSeatFree(car, i)
       and getCharInCarPassengerSeat(car, i) == ped then
         return i+1
       end
@@ -93,8 +93,11 @@ CGame.disableParkedCars = function()
 end
 CGame.setVehicleDamagable = function(handle, status)
   if not doesVehicleExist(handle) then return end
-  setCarProofs(handle, not status, not status, not status, not status, not status)
-  setCarCanBeDamaged(handle, status)
+  status = not status
+  setCarProofs(handle, status, status, status, status, status)
+  setCarCanBeVisiblyDamaged(handle, not status)
+  setCarCanBeDamaged(handle, not status)
+  setCanBurstCarTires(handle, not status)
 end
 CGame.disableHazeEffect = function()
   memory.write(0x72C1B7, 0xEB, 1, true)
@@ -106,4 +109,98 @@ CGame.getBodyPartCoordinates = function(id, handle)
   local vec = ffi.new("float[3]")
   CGame.getBonePosition(ffi.cast("void*", pedptr), vec, id, true)
   return vec[0], vec[1], vec[2]
+end
+
+CGame.SpecialSkins={[3]='ANDRE',[4]='BBTHIN',[5]='BB',[298]='CAT',[292]='CESAR',[190]='COPGRL3',[299]='CLAUDE',[194]='CROGRL3',[268]='DWAYNE',
+[6]='EMMET',[272]='FORELLI',[195]='GANGRL3',[191]='GUNGRL3',[267]='HERN',[8]='JANITOR',[42]='JETHRO',[296]='JIZZY',[65]='KENDL',[2]='MACCER',
+[297]='MADDOGG',[192]='MECGRL3',[193]='NURGRL2',[293]='OGLOC',[291]='PAUL',[266]='PULASKI',[290]='ROSE',[271]='RYDER',[86]='RYDER3',[119]='SINDACO',
+[269]='SMOKE',[149]='SMOKEV',[208]='SUZIE',[270]='SWEET',[273]='TBONE',[265]='TENPEN',[295]='TORINO',[1]='TRUTH',[294]='WUZIMU',[289]='ZERO',
+[300]='LAPDNA',[301]='SFPDNA',[302]='LVPDNA',[303]='LAPDPC',[304]='LAPDPD',[305]='LVPDPC',[306]='WFYCLPD',[307]='VBFYCPD',[308]='WFYCLEM',
+[309]='WFYCLLV',[310]='CSHERNA',[311]='DSHERNA',[312]='COPGRL1'}
+CGame.createCharNet = function(pedtype, skinid, atX, atY, atZ)
+  local isSpec = false
+  if CGame.SpecialSkins[skinid] then
+    isSpec = true
+    loadSpecialCharacter(CGame.SpecialSkins[skinid], 1)
+  else
+    requestModel(skinid)
+    loadAllModelsNow()
+  end
+  local ped = createChar(pedtype, isSpec and 290 or skinid, atX, atY, atZ)
+  if isSpec then unloadSpecialCharacter(1)
+  else markModelAsNoLongerNeeded(skinid) end
+  return ped
+end
+CGame.setPlayerSkin = function(skinid)
+  local isSpec = false
+  if CGame.SpecialSkins[skinid] then
+    isSpec = true
+    loadSpecialCharacter(CGame.SpecialSkins[skinid], 1)
+    while not hasSpecialCharacterLoaded(1) do wait(0) end
+  else
+    requestModel(skinid)
+    loadAllModelsNow()
+    while not hasModelLoaded(skinid) do wait(0) end
+  end
+  local x, y, z = getCharCoordinates(PLAYER_PED)
+  setPlayerModel(PLAYER_HANDLE, isSpec and 290 or skinid)
+  if isSpec then unloadSpecialCharacter(1)
+  else markModelAsNoLongerNeeded(skinid) end
+end
+CGame.hookPickupCollected = function()
+  while true do
+    if LPlayer.lpGameState == S_GAMESTATES.GS_CONNECTED then
+      for i = 1, #GPool.GPickups do
+        if GPool.GPickups[i].handle and doesPickupExist(GPool.GPickups[i].handle) then
+          if hasPickupBeenCollected(GPool.GPickups[i].handle) then
+            local bs = SLNet.createBitStream()
+            SLNet.writeInt16(bs, S_RPC.PLAYER_PICK_PICKUP)
+            SLNet.writeInt16(bs, GPool.GPickups[i].pickupid)
+            SPool.sendRPC(bs)
+            SLNet.deleteBitStream(bs)
+          end
+        end
+      end
+    end
+    wait(100)
+  end
+end
+CGame.weaponSync = function()
+  while true do
+    wait(100)
+    if LPlayer.lpGameState == S_GAMESTATES.GS_CONNECTED then
+      local updated = false
+      if getCurrentCharWeapon(PLAYER_PED) ~= LPlayer.lpCurrentWeapon then
+        updated = true
+      end
+      for i = 1, 13 do
+        local weapon, ammo, modelid = getCharWeaponInSlot(PLAYER_PED, i-1)
+        if weapon < 0 or weapon > 255 then weapon = 0 end
+        if ammo < 0 or ammo > 32767 then ammo = 0 end
+        if not LPlayer.lpWeapons[i] or weapon ~= LPlayer.lpWeapons[i][1]
+        or ammo ~= LPlayer.lpWeapons[i][2] then
+          updated = true
+          break
+        end
+      end
+      if updated then
+        ltSendUpdateWeapons = os.time() + 1
+        local bs = SLNet.createBitStream()
+        SLNet.writeInt16(bs, S_PACKETS.WEAPONS_SYNC)
+        for i = 1, 13 do
+          local weapon, ammo, modelid = getCharWeaponInSlot(PLAYER_PED, i-1)
+          if weapon < 0 or weapon > 255 then weapon = 0 end
+          if ammo < 0 or ammo > 32767 then ammo = 0 end
+          SLNet.writeUInt8(bs, tonumber(weapon))
+          SLNet.writeUInt16(bs, tonumber(ammo))
+          LPlayer.lpWeapons[i] = {tonumber(weapon), tonumber(ammo)}
+        end
+        local currentWeapon = getCurrentCharWeapon(PLAYER_PED)
+        LPlayer.lpCurrentWeapon = currentWeapon
+        SLNet.writeInt8(bs, tonumber(currentWeapon))
+        SPool.sendPacket(bs)
+        SLNet.deleteBitStream(bs)
+      end
+    end
+  end
 end

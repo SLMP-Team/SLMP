@@ -48,3 +48,32 @@ function RPC_PlayerJoin(bitStream)
   --print('connected ' .. pData.nickname .. ' with ID ' .. pData.playerid)
   return true
 end
+
+function RPC_CreatePickup(bitStream)
+  local pData = {}
+  pData.pickupid = SLNet.readInt16(bitStream)
+  pData.modelid = SLNet.readInt16(bitStream)
+  pData.pickuptype = SLNet.readInt8(bitStream)
+  local slot = #GPool.GPickups + 1
+  GPool.GPickups[slot] =
+  {
+    pickupid = pData.pickupid,
+    modelid = pData.modelid,
+    pickuptype = pData.pickuptype
+  }
+  return true
+end
+
+function RPC_DestroyPickup(bitStream)
+  local pickupid = SLNet.readInt16(bitStream)
+  for i = #GPool.GPickups, 1, -1 do
+    if GPool.GPickups[i].pickupid == pickupid then
+      if GPool.GPickups[i].handle and doesPickupExist(GPool.GPickups[i].handle) then
+        removePickup(GPool.GPickups[i].handle)
+      end
+      table.remove(GPool.GPickups, i)
+      return true
+    end
+  end
+  return false
+end
