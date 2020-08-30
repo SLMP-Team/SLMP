@@ -23,6 +23,9 @@ end
 CGame.disableCJWalkAnimation = function ()
   pcall(memory.fill, 0x609A4E, 0x90, 6, true)
 end
+CGame.disableIdleAnimation = function ()
+  pcall(memory.setuint8, 0x86D1EC, 0x90, 0, true)
+end
 CGame.disableWasted = function()
   pcall(memory.fill, 0x56E5AD, 0x90, 5, true)
 end
