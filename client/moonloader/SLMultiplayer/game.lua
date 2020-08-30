@@ -24,10 +24,10 @@ CGame.disableWasted = function()
   pcall(memory.fill, 0x56E5AD, 0x90, 5, true)
 end
 CGame.getGamestate = function()
-  return memory.getuint32(0xC8D4C0, false)
+  return memory.getuint32(0xC8D4C0, true)
 end
 CGame.setGamestate = function(gamestate)
-  pcall(memory.setuint32, 0xC8D4C0, gamestate, true)
+  memory.setuint32(0xC8D4C0, gamestate, true)
 end
 CGame.disableBlurEffect = function()
   pcall(memory.fill, 0x704E8A, 0x90, 5, true)
