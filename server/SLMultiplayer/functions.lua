@@ -49,7 +49,9 @@ function createVehicle(model, posX, posY, posZ, color1, color2)
     roll = 0.0,
     colors = {color1, color2},
     streamedFor = {},
-    virtualWorld = 0
+    virtualWorld = 0,
+    startPos = {posX, posY, posZ},
+    lastRespawn = os.time()
   }
   local bs = SLNet.createBitStream()
   SLNet.writeInt16(bs, S_RPC.CREATE_VEHICLE)
@@ -167,8 +169,9 @@ function setPlayerControllable(playerid, canMove)
   return false
 end
 function setTimer(timeMS, repeatTimer, callback, ...)
+  local args = {...}
   local timerid = CTimer.setTimer(timeMS,
-  repeatTimer, callback, unpack(arg))
+  repeatTimer, callback, unpack(args))
   return timerid
 end
 function killTimer(timerid)
@@ -302,4 +305,31 @@ function resetWeapons(playerid)
 end
 function isValidVehicle(vehicleid)
   return SPool.isValidVehicle(vehicleid)
+end
+function respawnVehicle(vehicleid)
+  return SPool.respawnVehicle(vehicleid)
+end
+function setChatBubble(playerid, text, color, timeMS, distance)
+  for i = 1, #SPool.sPlayers do
+    if SPool.sPlayers[i].playerid == playerid then
+      local bs = SLNet.createBitStream()
+      SLNet.writeInt16(bs, S_RPC.SET_CHAT_BUBBLE)
+      SLNet.writeInt16(bs, playerid)
+      SLNet.writeInt16(bs, timeMS)
+      SLNet.writeFloat(bs, distance)
+      SLNet.writeUInt32(bs, color)
+      SLNet.writeString(bs, tostring(text))
+      for ii = 1, #SPool.sPlayers do
+        if ii ~= i then
+          if SPool.isPlayerStreamedForPlayer(SPool.sPlayers[i].playerid, SPool.sPlayers[ii].playerid) then
+            SPool.sendRPC(bs, SPool.sPlayers[ii].bindedIP,
+            SPool.sPlayers[ii].bindedPort)
+          end
+        end
+      end
+      SLNet.deleteBitStream(bs)
+      return true
+    end
+  end
+  return false
 end

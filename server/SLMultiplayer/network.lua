@@ -35,7 +35,8 @@ S_RPC =
   DESTROY_PICKUP = 17,
   PLAYER_PICK_PICKUP = 18,
   GIVE_WEAPON = 19,
-  RESET_WEAPONS = 20
+  RESET_WEAPONS = 20,
+  SET_CHAT_BUBBLE = 21
 }
 
 S_PLAYERSTATE =
@@ -53,20 +54,12 @@ SPool =
 }
 
 SPool.sendPacket = function(bitStream, address, port)
-  if type(address) ~= 'string'
-  or type(port) ~= 'number' then
-    return false
-  end
-  udp:sendto('SLMP-P'..SLNet.exportBytes(bitStream), address, port)
+  udp:sendto('SLMP-P'..SLNet.exportBytes(bitStream), tostring(address), tonumber(port))
   return true
 end
 
 SPool.sendRPC = function(bitStream, address, port)
-  if type(address) ~= 'string'
-  or type(port) ~= 'number' then
-    return false
-  end
-  udp:sendto('SLMP-R'..SLNet.exportBytes(bitStream), address, port)
+  udp:sendto('SLMP-R'..SLNet.exportBytes(bitStream), tostring(address), tonumber(port))
   return true
 end
 
@@ -157,6 +150,34 @@ SPool.isValidVehicle = function(vehicleid)
     end
   end
   return false
+end
+SPool.respawnVehicle = function(vehicleid)
+  for i = 1, #SPool.sVehicles do
+    if SPool.sVehicles[i].vehicleid == vehicleid then
+      SPool.sVehicles[i].position = {SPool.sVehicles[i].startPos[1],
+      SPool.sVehicles[i].startPos[2], SPool.sVehicles[i].startPos[3]}
+      SPool.sVehicles[i].health = 1000.0
+      SPool.sVehicles[i].lastRespawn = 1000.0
+      local bs = SLNet.createBitStream()
+      SLNet.writeInt16(bs, S_RPC.DESTROY_VEHICLE)
+      SLNet.writeInt16(bs, vehicleid)
+      local bs2 = SLNet.createBitStream()
+      SLNet.writeInt16(bs2, S_RPC.CREATE_VEHICLE)
+      SLNet.writeInt16(bs2, vehicleid)
+      SLNet.writeInt16(bs2, SPool.sVehicles[i].model)
+      SLNet.writeInt16(bs2, SPool.sVehicles[i].colors[1])
+      SLNet.writeInt16(bs2, SPool.sVehicles[i].colors[2])
+      for ii = 1, #SPool.sPlayers do
+        SPool.sendRPC(bs, SPool.sPlayers[ii].bindedIP, SPool.sPlayers[ii].bindedPort)
+        SPool.sendRPC(bs2, SPool.sPlayers[ii].bindedIP, SPool.sPlayers[ii].bindedPort)
+      end
+      SLNet.deleteBitStream(bs)
+      SLNet.deleteBitStream(bs2)
+      SPool.sVehicles[i].streamedFor = {}
+      return true
+    end
+  end
+  return true
 end
 
 function SPool.onPacketReceive(bitStream, pAddress, pPort)

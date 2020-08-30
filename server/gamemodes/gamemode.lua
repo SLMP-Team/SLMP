@@ -6,16 +6,30 @@ function onGamemodeInit()
   createVehicle(484, -258.6933, -352.0168, 1.8031, 0, 0)
   createVehicle(484, -242.0115, -367.5419, 1.3931, 0, 0)
   setTimer((60*1000), true, sendClientMessageToAll, 'Спасибо, что играете на нашем сервере!', 0xFFFF00FF)
-  -- Таймеры временно не работают :з
   testPickup = createPickup(1239, 2, -25.3066, 47.5188, 3.1171, 0, 0)
+  setTimer(1000, true, checkPlayers)
 end
 
+local pInfo = {}
 local playerVehicles = {}
+
+function checkPlayers()
+  for i = 1, #pInfo do
+    pInfo[i].afktime = pInfo[i].afktime + 1
+    if pInfo[i].afktime >= 5 then
+      setChatBubble(pInfo[i].playerid, 'На паузе: ' .. pInfo[i].afktime .. ' сек.', 0xFFFF0000, 1100, 50.0)
+    end
+  end
+end
 
 function onPlayerConnect(playerid)
   playerVehicles[playerid] = createVehicle(487, math.random(0, 50), math.random(0, 50), 2.0, 1, 1)
   sendClientMessage(playerid, '{FF0000}Добро {28B463FF}пожаловать {F4D03FFF}на сервер!', 0xFFFFFFFF)
   sendClientMessageToAll('{FF0000}' .. getPlayerName(playerid) .. ' {FFFFFF}залетел на наш сервер!', 0xFF0000FF)
+  table.insert(pInfo, {
+    playerid = playerid,
+    afktime = 0
+  })
 end
 
 function onPlayerSpawn(playerid)
@@ -30,6 +44,11 @@ function onPlayerDisconnect(playerid, reason)
     destroyVehicle(playerVehicles[playerid])
   end
   sendClientMessageToAll('{FF0000}' .. getPlayerName(playerid) .. ' принял Ислам и вышел с сервера!', 0xFF0000FF)
+  for i = #pInfo, 1, -1 do
+    if pInfo[i].playerid == playerid then
+      table.remove(pInfo, i)
+    end
+  end
 end
 
 function onPlayerChat(playerid, message)
@@ -70,12 +89,19 @@ function onPlayerCommand(playerid, command)
     local skinid = command:match('^skin%s(%d+)')
     setPlayerSkin(playerid, tonumber(skinid))
     return true
+  elseif command == 'respv' then
+    respawnVehicle(playerVehicles[playerid])
+    return true
   end
   sendClientMessage(playerid, '{FF0000}Неизвестная команда! {FFFFFF}Введите /help для помощи.', 0xFFFFFFFF)
 end
 
 function onPlayerUpdate(playerid)
-
+  for i = 1, #pInfo do
+    if pInfo[i].playerid == playerid then
+      pInfo[i].afktime = 0
+    end
+  end
 end
 
 function onPlayerStreamOut(playerid, forplayerid)

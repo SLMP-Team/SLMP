@@ -281,6 +281,9 @@ function Packet_UnoccupiedSync(bitStream, pAddress, pPort)
   if SPool.sVehicles[car].position == pData.position then
     return false
   end
+  if os.time() - SPool.sVehicles[car].lastRespawn < 5 then
+    return false -- move only after 5 seconds after spawn
+  end
   SPool.sVehicles[car].position = pData.position
 
   for i = 1, #SPool.sPlayers do
@@ -357,6 +360,9 @@ function Packet_InCar(bitStream, pAddress, pPort)
     end
   end
   if car == -1 then return false end
+  if os.time() - SPool.sVehicles[car].lastRespawn < 5 then
+    return false -- move only after 5 seconds after spawn
+  end
 
   SPool.sPlayers[clientID].position = pData.position
   SPool.sPlayers[clientID].health = pData.pHealth
