@@ -24,10 +24,10 @@ CGame.disableWasted = function()
   pcall(memory.fill, 0x56E5AD, 0x90, 5, true)
 end
 CGame.getGamestate = function()
-  return memory.getuint32(0xC8D4C0, false)
+  return memory.getuint32(0xC8D4C0, true)
 end
 CGame.setGamestate = function(gamestate)
-  pcall(memory.setuint32, 0xC8D4C0, gamestate, true)
+  memory.setuint32(0xC8D4C0, gamestate, true)
 end
 CGame.disableBlurEffect = function()
   pcall(memory.fill, 0x704E8A, 0x90, 5, true)
@@ -196,13 +196,13 @@ CGame.weaponSync = function()
           local weapon, ammo, modelid = getCharWeaponInSlot(PLAYER_PED, i-1)
           if weapon < 0 or weapon > 255 then weapon = 0 end
           if ammo < 0 or ammo > 32767 then ammo = 0 end
-          SLNet.writeUInt8(bs, tonumber(weapon))
-          SLNet.writeUInt16(bs, tonumber(ammo))
-          LPlayer.lpWeapons[i] = {tonumber(weapon), tonumber(ammo)}
+          SLNet.writeUInt8(bs, weapon)
+          SLNet.writeUInt16(bs, ammo)
+          LPlayer.lpWeapons[i] = {weapon, ammo}
         end
         local currentWeapon = getCurrentCharWeapon(PLAYER_PED)
         LPlayer.lpCurrentWeapon = currentWeapon
-        SLNet.writeInt8(bs, tonumber(currentWeapon))
+        SLNet.writeInt8(bs, currentWeapon)
         SPool.sendPacket(bs)
         SLNet.deleteBitStream(bs)
       end

@@ -35,7 +35,7 @@ imgui.OnInitialize(function()
     local tmp = imgui.CreateTextureFromFile(mpFolder .. 'Resources\\Wallpapers\\wall'..i..'.jpg')
     if tmp then IM_WALLPAPER[#IM_WALLPAPER+1] = tmp end
   end
-  CGraphics.ClientSettings.tWallpaperID = math.random(1, #IM_WALLPAPER)
+  CGraphics.ClientSettings.tWallpaperID = math.random(#IM_WALLPAPER)
   local config = imgui.ImFontConfig()
 	config.MergeMode = true
 	config.PixelSnapH = true
@@ -190,7 +190,7 @@ function(self)
       local wasPicture = CGraphics.ClientSettings.tWallpaperID
       local findPicture = false
       while not findPicture do
-        CGraphics.ClientSettings.tWallpaperID = math.random(1, #IM_WALLPAPER)
+        CGraphics.ClientSettings.tWallpaperID = math.random(#IM_WALLPAPER)
         findPicture = true
         if #IM_WALLPAPER > 1 and wasPicture == CGraphics.ClientSettings.tWallpaperID then
           findPicture = false

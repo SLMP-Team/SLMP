@@ -11,18 +11,18 @@ dofile(mpFolder .. "packets.lua") -- SL:MP Packets Proccessing File
 dofile(mpFolder .. "rpc.lua") -- SL:MP RPC Proccessing File
 
 local gMenuPatch = true
-if memory.getuint32(0xC8D4C0, false) < 9 then
+if CGame.getGamestate() < 9 then
   gMenuPatch = false
   memory.copy(0x866CCC, "slmp_load", ("slmp_load"):len())
   memory.fill(0x747483, 0x90, 6, true) -- bypass vids
-  memory.setuint32(0xC8D4C0, 5, true) -- skip intros by changing game state
+  CGame.setGamestate(5)
 end
 
 function onD3DPresent()
-  if memory.getuint32(0xC8D4C0, true) == 7 and not gMenuPatch then
+  if CGame.getGamestate() == 7 and not gMenuPatch then
     gMenuPatch = true
     memory.setuint8(0xBA6831, 1, true) -- game started = 1
-    memory.setuint32(0xC8D4C0, 8, true) -- game state = 8
+    CGame.setGamestate(8)
     memory.setuint8(0xBA67A4, 0, true) -- disable a menu
     memory.setuint8(0xBA677B, 0, true) -- not start a game (???)
   end

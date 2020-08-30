@@ -55,7 +55,7 @@ SPool =
 }
 
 SPool.setAddress = function(ip, port)
-  SPool.sIP = tostring(ip) or ''
+  SPool.sIP = type(ip) == 'string' and ip or ''
   SPool.sPort = tonumber(port) or 0
 end
 
