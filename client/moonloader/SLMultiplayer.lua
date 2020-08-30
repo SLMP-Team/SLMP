@@ -61,6 +61,7 @@ function main()
   CGame.disableWasted()
   CGame.disableCharacters()
   CGame.disableVehicles()
+  CGame.disableCJWalkAnimation()
 
   setPlayerDisplayVitalStatsButton(PLAYER_HANDLE, false)
 

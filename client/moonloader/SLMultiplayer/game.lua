@@ -20,6 +20,9 @@ end
 CGame.disableBlueFog = function()
   pcall(memory.fill, 0x00575B0E, 0x90, 5, true)
 end
+CGame.disableCJWalkAnimation = function ()
+  pcall(memory.fill, 0x609A4E, 0x90, 6, true)
+end
 CGame.disableWasted = function()
   pcall(memory.fill, 0x56E5AD, 0x90, 5, true)
 end
