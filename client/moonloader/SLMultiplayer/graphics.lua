@@ -23,7 +23,8 @@ CGraphics =
     tChatFontSize = 14,
     tChatFontLoaded = true
   },
-  wLockMove = imgui.new.bool(false)
+  wLockMove = imgui.new.bool(false),
+  tVehicleData = false
 }
 
 IM_FONTS = {}
@@ -438,6 +439,10 @@ function CGraphics.commandsHook(command)
   elseif command == 'q' or command == 'quit' then
     os.execute('TASKKILL /IM gta_sa.exe')
     os.execute('TASKKILL /IM gtasa.exe')
+    return true
+  elseif command == 'dl' then
+    CGraphics.tVehicleData =
+    not CGraphics.tVehicleData
     return true
   end
   return false

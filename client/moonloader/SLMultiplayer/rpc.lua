@@ -7,7 +7,7 @@ function RPC_CreateVehicle(bitStream)
     SLNet.readInt16(bitStream)
   }
   local slot = #GPool.GVehicles + 1
-  GPool.GVehicles[slot] = 
+  GPool.GVehicles[slot] =
   {
     vehicleid = pData.vehicleid,
     model = pData.model,
@@ -43,7 +43,13 @@ function RPC_PlayerJoin(bitStream)
     nickname = pData.nickname,
     position = {0.0, 0.0, 0.0},
     health = 100.0, armour = 0.0,
-    inCar = 0, skin = 0
+    inCar = 0, skin = 0,
+    chatBubble = {
+      text = '',
+      color = 0,
+      time = 0,
+      distance = 0.0
+    }
   }
   --print('connected ' .. pData.nickname .. ' with ID ' .. pData.playerid)
   return true

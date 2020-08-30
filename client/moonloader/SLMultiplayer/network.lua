@@ -35,7 +35,8 @@ S_RPC =
   DESTROY_PICKUP = 17,
   PLAYER_PICK_PICKUP = 18,
   GIVE_WEAPON = 19,
-  RESET_WEAPONS = 20
+  RESET_WEAPONS = 20,
+  SET_CHAT_BUBBLE = 21
 }
 
 SPool =
@@ -176,6 +177,25 @@ function SPool.onRPCReceive(bitStream)
       giveWeaponToChar(PLAYER_PED, weapid, ammo)
       setCurrentCharWeapon(PLAYER_PED, weapid)
       markModelAsNoLongerNeeded(weaponModel)
+    elseif pID == S_RPC.SET_CHAT_BUBBLE then
+      local pData = {}
+      pData.playerid = SLNet.readInt16(bitStream)
+      pData.timeMS = SLNet.readInt16(bitStream)
+      pData.distance = SLNet.readFloat(bitStream)
+      pData.color = SLNet.readUInt32(bitStream)
+      pData.text = SLNet.readString(bitStream)
+      for i = 1, #GPool.GPlayers do
+        if GPool.GPlayers[i].playerid == pData.playerid then
+          GPool.GPlayers[i].chatBubble =
+          {
+            text = pData.text,
+            color = pData.color,
+            distance = pData.distance,
+            time = os.clock() + pData.timeMS / 1000
+          }
+          break
+        end
+      end
     end
   end
   return true

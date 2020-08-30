@@ -89,7 +89,9 @@ function Packet_OnFoot_Sync(bitStream)
         setCharDecisionMaker(GPool.GPlayers[i].handle, dec)
         setCharProofs(GPool.GPlayers[i].handle, true, true, true, true, true)
         setCharDropsWeaponsWhenDead(GPool.GPlayers[i].handle, false)
-        setCharKindaStayInSamePlace(GPool.GPlayers[i].handle, true)
+        setCharStayInSamePlace(GPool.GPlayers[i].handle, true)
+        setCharCantBeDraggedOut(GPool.GPlayers[i].handle, true)
+        setCharDrownsInWater(GPool.GPlayers[i].handle, false)
         --markModelAsNoLongerNeeded(pData.skin)
         GPool.GPlayers[i].inCar = 0
         GPool.GPlayers[i].interior = 0
@@ -272,7 +274,9 @@ function Packet_InCar_Sync(bitStream)
       setCharDecisionMaker(GPool.GPlayers[player].handle, dec)
       setCharProofs(GPool.GPlayers[player].handle, true, true, true, true, true)
       setCharDropsWeaponsWhenDead(GPool.GPlayers[player].handle, false)
-      setCharKindaStayInSamePlace(GPool.GPlayers[player].handle, true)
+      setCharStayInSamePlace(GPool.GPlayers[player].handle, true)
+      setCharCantBeDraggedOut(GPool.GPlayers[player].handle, true)
+      setCharDrownsInWater(GPool.GPlayers[player].handle, false)
       --markModelAsNoLongerNeeded(pData.skin)
       GPool.GPlayers[player].inCar = 0
       GPool.GPlayers[player].skin = pData.skin

@@ -1,6 +1,6 @@
 CGame =
 {
-  cVersion = 'SL:MP 0.0.1-RC6',
+  cVersion = 'SL:MP 0.0.1-RC7',
   cScreen = {x = 0, y = 0}
 }
 CGame.cScreen.x, CGame.cScreen.y = getScreenResolution()
@@ -19,12 +19,6 @@ CGame.disableVehicles = function()
 end
 CGame.disableBlueFog = function()
   pcall(memory.fill, 0x00575B0E, 0x90, 5, true)
-end
-CGame.disableCJWalkAnimation = function ()
-  pcall(memory.fill, 0x609A4E, 0x90, 6, true)
-end
-CGame.disableIdleAnimation = function ()
-  pcall(memory.setuint8, 0x86D1EC, 0x90, 0, true)
 end
 CGame.disableWasted = function()
   pcall(memory.fill, 0x56E5AD, 0x90, 5, true)
@@ -99,14 +93,19 @@ CGame.disableParkedCars = function()
 end
 CGame.setVehicleDamagable = function(handle, status)
   if not doesVehicleExist(handle) then return end
-  status = not status
-  setCarProofs(handle, status, status, status, status, status)
-  setCarCanBeVisiblyDamaged(handle, not status)
-  setCarCanBeDamaged(handle, not status)
-  setCanBurstCarTires(handle, not status)
+  setCarProofs(handle, not status, not status, not status, not status, not status)
+  setCarCanBeVisiblyDamaged(handle, status)
+  setCarCanBeDamaged(handle, status)
+  setCanBurstCarTires(handle, status)
 end
 CGame.disableHazeEffect = function()
   memory.write(0x72C1B7, 0xEB, 1, true)
+end
+CGame.disableCJWalkAnimation = function()
+  pcall(memory.fill, 0x609A4E, 0x90, 6, true)
+end
+CGame.disableIdleAnimation = function ()
+  pcall(memory.setuint8, 0x86D1EC, 0x90, 0, true)
 end
 
 CGame.getBonePosition = ffi.cast("int (__thiscall*)(void*, float*, int, bool)", 0x5E4280)

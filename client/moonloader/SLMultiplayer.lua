@@ -13,6 +13,7 @@ dofile(mpFolder .. "rpc.lua") -- SL:MP RPC Proccessing File
 local gMenuPatch = true
 if memory.getuint32(0xC8D4C0, false) < 9 then
   gMenuPatch = false
+  memory.copy(0x866CCC, "slmp_load", ("slmp_load"):len())
   memory.fill(0x747483, 0x90, 6, true) -- bypass vids
   memory.setuint32(0xC8D4C0, 5, true) -- skip intros by changing game state
 end
@@ -62,7 +63,7 @@ function main()
   CGame.disableCharacters()
   CGame.disableVehicles()
   CGame.disableCJWalkAnimation()
-  CGame.disableIdleAnimtion()
+  CGame.disableIdleAnimation()
 
   setPlayerDisplayVitalStatsButton(PLAYER_HANDLE, false)
 
@@ -199,8 +200,32 @@ function gameLoop()
           end
         end
       end
-      if not isGamePaused then
+      if not isGamePaused() then
         renderNametags()
+        if CGraphics.tVehicleData then
+          renderVehicleData()
+        end
+      end
+    end
+  end
+end
+
+function renderVehicleData()
+  local pX, pY, pZ = getCharCoordinates(PLAYER_PED)
+  for i = 1, #GPool.GVehicles do
+    if GPool.GVehicles[i].handle and doesVehicleExist(GPool.GVehicles[i].handle) then
+      if isCarOnScreen(GPool.GVehicles[i].handle) then
+        local cX, cY, cZ = getCarCoordinates(GPool.GVehicles[i].handle)
+        local dist = getDistanceBetweenCoords3d(cX, cY, cZ, pX, pY, pZ)
+        if dist <= 50.0 then
+          local camX, camY, camZ = getActiveCameraCoordinates()
+          local wposX, wposY = convert3DCoordsToScreen(cX, cY, cZ + 0.4 + (dist * 0.05))
+          local result, colPoint = processLineOfSight(camX, camY, camZ, cX, cY, cZ, true, false, false, true, false, false, false, true)
+          if result then
+            renderFontDrawText(renderVerdana, 'VehicleID: ' .. GPool.GVehicles[i].vehicleid ..
+            '\nVHealth: ' .. getCarHealth(GPool.GVehicles[i].handle), wposX, wposY, 0xFFFFFFFF)
+          end
+        end
       end
     end
   end
@@ -213,11 +238,15 @@ function renderNametags()
       if isCharOnScreen(GPool.GPlayers[i].handle) then
         local rpX, rpY, rpZ = CGame.getBodyPartCoordinates(8, GPool.GPlayers[i].handle)
         local dist = getDistanceBetweenCoords3d(rpX, rpY, rpZ, pX, pY, pZ)
-        if dist <= SPool.sNametag then
-          local camX, camY, camZ = getActiveCameraCoordinates()
-          local wposX, wposY = convert3DCoordsToScreen(rpX, rpY, rpZ + 0.4 + (dist * 0.05))
-          local result, colPoint = processLineOfSight(camX, camY, camZ, rpX, rpY, rpZ, true, false, false, true, false, false, false, true)
-          if not result then
+        local camX, camY, camZ = getActiveCameraCoordinates()
+        local wposX, wposY = convert3DCoordsToScreen(rpX, rpY, rpZ + 0.4 + (dist * 0.05))
+        local result, colPoint = processLineOfSight(camX, camY, camZ, rpX, rpY, rpZ, true, false, false, true, false, false, false, true)
+        if not result then
+          if GPool.GPlayers[i].chatBubble.time > os.clock()
+          and dist <= GPool.GPlayers[i].chatBubble.distance then
+            renderFontDrawText(renderVerdana, GPool.GPlayers[i].chatBubble.text, wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].chatBubble.text) / 2, wposY - 12, GPool.GPlayers[i].chatBubble.color)
+          end
+          if dist <= SPool.sNametag then
             renderFontDrawText(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")", wposX - renderGetFontDrawTextLength(renderVerdana, GPool.GPlayers[i].nickname .. " (" .. GPool.GPlayers[i].playerid .. ")") / 2, wposY, 0xFFFFFFFF)
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, 100 / 2, 6, 0xFF000000, 1, 0xFF000000)
             renderDrawBoxWithBorder(wposX - 24, wposY + renderGetFontDrawHeight(renderVerdana) + 4, GPool.GPlayers[i].health / 2, 6, 0xFFFF0000, 1, 0x00000000)
