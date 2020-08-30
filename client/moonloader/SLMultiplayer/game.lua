@@ -196,13 +196,13 @@ CGame.weaponSync = function()
           local weapon, ammo, modelid = getCharWeaponInSlot(PLAYER_PED, i-1)
           if weapon < 0 or weapon > 255 then weapon = 0 end
           if ammo < 0 or ammo > 32767 then ammo = 0 end
-          SLNet.writeUInt8(bs, tonumber(weapon))
-          SLNet.writeUInt16(bs, tonumber(ammo))
-          LPlayer.lpWeapons[i] = {tonumber(weapon), tonumber(ammo)}
+          SLNet.writeUInt8(bs, weapon)
+          SLNet.writeUInt16(bs, ammo)
+          LPlayer.lpWeapons[i] = {weapon, ammo}
         end
         local currentWeapon = getCurrentCharWeapon(PLAYER_PED)
         LPlayer.lpCurrentWeapon = currentWeapon
-        SLNet.writeInt8(bs, tonumber(currentWeapon))
+        SLNet.writeInt8(bs, currentWeapon)
         SPool.sendPacket(bs)
         SLNet.deleteBitStream(bs)
       end
