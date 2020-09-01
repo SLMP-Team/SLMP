@@ -1,4 +1,4 @@
-cd SLMultiplayer
+cd modules
 clear
-luajit ../SLMultiplayer.lua
+luajit ../server.lua
 read -p "Press enter to close"
