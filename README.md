@@ -1,2 +1,2 @@
-# SL-MP
-OpenSource GTA: San Andreas Multiplayer based on Lua Language
+# Simple Lua Multiplayer
+OpenSource GTA: San Andreas Multiplayer based on Lua
