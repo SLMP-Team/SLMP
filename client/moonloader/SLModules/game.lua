@@ -27,7 +27,9 @@ function RenderLoop()
         local wposX, wposY = convert3DCoordsToScreen(rpX, rpY, rpZ + 0.4 + (dist * 0.05))
         local result, colPoint = processLineOfSight(camX, camY, camZ, rpX, rpY, rpZ, true, false, false, true, false, false, false, true)
         if not result then
-          -- here I'll be add Chat Bubbles
+          if Players[i].chatBubble.time >= os.clock() and dist <= Players[i].chatBubble.dist then
+            renderFontDrawText(AiralFont, u8:decode(Players[i].chatBubble.text), wposX - renderGetFontDrawTextLength(AiralFont, u8:decode(Players[i].chatBubble.text)) / 2, wposY - 16, Players[i].chatBubble.color)
+          end
           if dist <= 20 then
             local health = getCharHealth(Players[i].handle)
             local a, r, g, b = explodeArgb(Players[i].color)

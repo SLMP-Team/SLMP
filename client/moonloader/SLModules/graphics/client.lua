@@ -72,6 +72,8 @@ function(self)
       sendPacket(PACKET.PING_SERVER, false, bs)
       Graphics.tClientPopupText = 'Connecting to server...'
       Client:connect(ffi.string(Graphics.ClientSettings.tNickname), ip, tonumber(port))
+      Config.playerName = ffi.string(Graphics.ClientSettings.tNickname)
+      Config.serverAddress = ffi.string(Graphics.ClientSettings.tAddress)
     end
   end
   imgui.PopFont()

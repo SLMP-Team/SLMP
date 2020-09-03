@@ -49,6 +49,11 @@ function Client:sendSync()
   end
 end
 function Client:disconnect(clearCache, reason)
+  if clearCache then
+    for i = 1, #Players do
+      Players:remove(i)
+    end
+  end
   reason = type(reason) == 'number' and reason or 0
   local bs = BitStream:new()
   bs:writeUInt8(reason)
@@ -56,9 +61,4 @@ function Client:disconnect(clearCache, reason)
   Player.GameState = GAMESTATE.DISCONNECTED
   udp:settimeout(0)
   udp:setpeername('localhost', 0)
-  if clearCache then
-    for i = 1, #Players do
-      Players:remove(i)
-    end
-  end
 end

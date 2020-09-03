@@ -49,3 +49,22 @@ function RPC_SendMessage(bitStream)
   local color = bitStream:readUInt32()
   Game:addChatMessage(str, color)
 end
+
+function RPC_ChatBubble(bitStream)
+  local client = bitStream:readUInt16()
+  local len = bitStream:readUInt8()
+  local text = bitStream:readString(len)
+  local color = bitStream:readUInt32()
+  local dist = bitStream:readFloat()
+  local time = bitStream:readUInt16()
+  local slot = Players:getSlotByID(client)
+  if slot ~= -1 then
+    Players[slot].chatBubble =
+    {
+      text = text,
+      time = time / 1000 + os.clock(),
+      color = color,
+      dist = dist
+    }
+  end
+end

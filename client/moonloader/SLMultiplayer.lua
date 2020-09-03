@@ -19,8 +19,8 @@ ffi = require 'ffi' -- one more focus
 FA = require 'FA5Pro' -- just icons
 
 encoding = require 'encoding'
-encoding.default = 'UTF8'
-cp1251 = encoding.CP1251
+encoding.default = 'CP1251'
+u8 = encoding.UTF8
 
 gMenuPatch = true
 if memory.getuint32(0xC8D4C0, false) < 9 then
@@ -75,6 +75,11 @@ end
 function onScriptTerminate(script, quitGame)
   if script == thisScript() then
     Client:disconnect(true)
+    local file = io.open(configFolder..'\\conf.json', 'w+')
+    if file then
+      file:write(encodeJson(Config))
+      file:close()
+    end
     udp:close()
   end
 end

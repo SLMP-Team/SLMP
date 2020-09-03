@@ -8,7 +8,14 @@ function Players:new(playerid, name)
     skin = 0,
     handle = nil,
     armour = 0,
-    color = 0xFFFFFF50
+    color = 0xFFFFFF50,
+    chatBubble =
+    {
+      text = '',
+      color = 0,
+      dist = 0,
+      time = 0
+    }
   })
 end
 function Players:getSlotByID(playerid)
@@ -26,7 +33,7 @@ function Players:remove(slot)
   table.remove(self, slot)
 end
 function Players:isSpawned(slot)
-  if self[slot].handle and doesCharExist(self[slot].handle) then
+  if self[slot] and doesCharExist(self[slot].handle) then
     return true
   end
   return false
