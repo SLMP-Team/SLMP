@@ -61,6 +61,9 @@ function Packet_OnFoot_Sync(clientSlot, bitStream, IP, PORT)
   if (os.clock() - Clients[clientSlot].lastSync) * 1000 < Config.OnFootRate then
     return
   end
+  if Clients[clientSlot].gamestate ~= GAMESTATE.ONFOOT then
+    return
+  end
   Clients[clientSlot].lastSync = os.clock()
   Clients[clientSlot].health = bitStream:readUInt8()
   Clients[clientSlot].armour = bitStream:readUInt8()

@@ -231,7 +231,22 @@ function Clients:sendMessageAll(text, color)
   bs:writeUInt8(text:len())
   bs:writeString(text)
   bs:writeUInt32(color)
-  for i = 1, Clients:count() do
+  for i = 1, self:count() do
     sendRPC(RPC.SEND_MESSAGE, true, bs, self[i].ip, self[i].port)
+  end
+end
+function Clients:setChatBubble(clientSlot, text, time, color, dist)
+  local bs = BitStream:new()
+  local clientID = self:getIDBySlot(clientSlot)
+  bs:writeUInt16(clientID)
+  bs:writeUInt8(#text)
+  bs:writeString(text)
+  bs:writeUInt32(color)
+  bs:writeFloat(dist)
+  bs:writeUInt16(time)
+  for i = 1, self:count() do
+    if i ~= clientSlot and Clients:isClientStreamed(i, clientID) then
+      sendRPC(RPC.SET_CHAT_BUBBLE, false, bs, self[i].ip, self[i].port)
+    end
   end
 end

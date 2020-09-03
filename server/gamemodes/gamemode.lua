@@ -8,9 +8,9 @@ end
 
 function onPlayerConnect(playerid)
   -- this functuin calls when player connects
-  Players:setSkin(playerid, math.random(1, 299))
-  Players:setPos(playerid, math.random(-10, 10), math.random(-10, 10), 3.0)
-  Players:setAngle(playerid, math.random(0, 365))
+  Players:setSkin(playerid, 46)
+  Players:setPos(playerid, 50.0, 50.0, 3.0)
+  Players:setAngle(playerid, 0.0)
   Players:setWorld(playerid, 0)
   Players:setInterior(playerid, 0)
   Players:sendMessageAll(Players:getName(playerid) .. '{FFFFFF} joined the game', Players:getColor(playerid))
@@ -24,6 +24,7 @@ function onPlayerDisconnect(playerid, reason)
 end
 
 function onPlayerChat(playerid, text)
+  Players:setChatBubble(playerid, text, 5000, 0xFFFFFFFF, 50.0)
   return true -- set FALSE to prevent sending "chat-like" message
 end
 

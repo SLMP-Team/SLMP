@@ -33,7 +33,7 @@ local function preparePacket(isRPC, PacketID, PacketPriority, PacketData, Client
   isRPC = type(isRPC) == 'boolean' and isRPC or false
   local str = 'SLMP' .. (isRPC and 'R' or 'P')
   PacketID = type(PacketID) == 'number' and PacketID or 0
-  str = str .. tostring(PacketID)
+  str = str .. ('%.3d'):format(PacketID)
   PacketPriority = type(PacketPriority) == 'boolean' and PacketPriority or false
   if type(PacketData) == 'string' and PacketPriority and pTry < 5 then
     local freeID = confirmPackets:getID()
@@ -83,9 +83,9 @@ function MainLoop()
       -- structure of data should be: SLMP[P/R][ID][1/0][DATA]
       -- if PRIORITY equals 1 first UINT_16 in DATA will be unique ID
       if message:sub(1,4) == 'SLMP' then
-        local dataID = tonumber(message:sub(6,6))
-        local dataPriority = tonumber(message:sub(7,7))
-        local dataMessage = message:sub(8,#message)
+        local dataID = tonumber(message:sub(6,8))
+        local dataPriority = tonumber(message:sub(9,9))
+        local dataMessage = message:sub(10,#message)
         if dataID and dataPriority and dataMessage then
           if dataPriority == 1 then
             local bitStream = BitStream:new()

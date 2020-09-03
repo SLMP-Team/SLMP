@@ -97,3 +97,9 @@ end
 function Players:sendMessageAll(text, color)
   Clients:sendMessageAll(text, color)
 end
+function Players:setChatBubble(playerid, text, time, color, dist)
+  local clientSlot = Clients:getSlotByID(playerid)
+  if slot ~= -1 then
+    Clients:setChatBubble(clientSlot, text, time, color, dist)
+  end
+end
