@@ -68,3 +68,17 @@ function RPC_ChatBubble(bitStream)
     }
   end
 end
+
+function RPC_ShowDialog(bitStream)
+  local id = bitStream:readUInt16()
+  local dType = bitStream:readUInt8()
+  local title = bitStream:readUInt8()
+  title = bitStream:readString(title)
+  local bLen = bitStream:readUInt8()
+  local b1 = bitStream:readString(bLen)
+  bLen = bitStream:readUInt8()
+  local b2 = bitStream:readString(bLen)
+  local tLen = bitStream:readUInt32()
+  local text = bitStream:readString(tLen)
+  Game:showDialog(id, title, text, dType, b1, b2)
+end

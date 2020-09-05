@@ -62,3 +62,6 @@ function imgui.textRGB(text, wrapped) -- by imring
       end
   end
 end
+function ImRGBA(r, g, b, a)
+  return imgui.ImVec4(r / 255, g / 255, b / 255, a / 255)
+end

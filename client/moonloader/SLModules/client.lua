@@ -62,3 +62,12 @@ function Client:disconnect(clearCache, reason)
   udp:settimeout(0)
   udp:setpeername('localhost', 0)
 end
+function Client:sendDialogResponse(id, button, list, text)
+  local bs = BitStream:new()
+  bs:writeUInt16(id)
+  bs:writeUInt8(button)
+  bs:writeUInt8(list)
+  bs:writeUInt8(#text)
+  bs:writeString(text)
+  sendRPC(RPC.DIALOG_RESPONSE, true, bs)
+end

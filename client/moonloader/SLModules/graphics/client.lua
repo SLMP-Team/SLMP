@@ -1,6 +1,6 @@
 imgui.OnFrame(function() return not isGamePaused() and Graphics.wClient[0] end,
 function(self)
-  local scr = {1920, 1080}
+  local scr = Game:getResolution()
   imgui.LockPlayer = true
   imgui.HideCursor = false
   imgui.SetNextWindowPos(imgui.ImVec2(0, 0), imgui.Cond.FirstUseEver, imgui.ImVec2(0.0, 0.0))

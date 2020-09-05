@@ -126,3 +126,16 @@ function Game:addChatMessage(text, color)
   })
   Graphics.ChatSettings.tRefocusNeed = true
 end
+
+function Game:showDialog(dID, dTitle, dText, dType, dButton1, dButton2)
+  if not dButton2 then dButton2 = '' end
+  Graphics.DialogSettings.tDialogID = dID
+  Graphics.DialogSettings.tDialogTitle = dTitle
+  Graphics.DialogSettings.tDialogText = dText
+  Graphics.DialogSettings.tDialogType = dType
+  Graphics.DialogSettings.tDialogButtons = {dButton1, dButton2}
+  ffi.copy(Graphics.DialogSettings.tDialogInput, '')
+  Graphics.DialogSettings.tFocus = true
+  Graphics.DialogSettings.tDialogSelected = 0
+  Graphics.wDialog[0] = true
+end

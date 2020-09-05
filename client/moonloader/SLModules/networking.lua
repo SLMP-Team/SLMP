@@ -155,6 +155,8 @@ function RPC_Receiver(PacketID, bitStream)
       RPC_SendMessage(bitStream)
     elseif PacketID == RPC.SET_CHAT_BUBBLE then
       RPC_ChatBubble(bitStream)
+    elseif PacketID == RPC.SHOW_DIALOG then
+      RPC_ShowDialog(bitStream)
     end
   end
 end

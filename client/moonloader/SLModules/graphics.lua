@@ -21,6 +21,17 @@ Graphics =
     tChatMessages = {},
     tChatFontSize = 1,
     tChatFontLoaded = true
+  },
+  wDialog = imgui.new.bool(false),
+  DialogSettings =
+  {
+    tDialogID = 0,
+    tDialogTitle = '',
+    tDialogText = '',
+    tDialogType = 0,
+    tDialogButtons = {'OK', 'Close'},
+    tDialogInput = imgui.new.char[144](),
+    tDialogSelected = -1
   }
 }
 
@@ -51,3 +62,4 @@ end)
 
 dofile(modules..'/graphics/chat.lua')
 dofile(modules..'/graphics/client.lua')
+dofile(modules..'/graphics/dialog.lua')
