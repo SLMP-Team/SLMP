@@ -38,7 +38,8 @@ function Clients:new(name, ip, port, gpci)
     interior = 0,
     gamestate = GAMESTATE.ONFOOT,
     lastSync = os.clock(),
-    color = 0xFFFFFF50
+    color = 0xFFFFFF50,
+    lastDialog = -1
   })
   return freeID
 end
@@ -249,4 +250,15 @@ function Clients:setChatBubble(clientSlot, text, time, color, dist)
       sendRPC(RPC.SET_CHAT_BUBBLE, false, bs, self[i].ip, self[i].port)
     end
   end
+end
+function Clients:showDialog(clientSlot, id, dType, title, text, button1, button2)
+  self[clientSlot].lastDialog = id -- protect from fake-dialog responses
+  local bs = BitStream:new()
+  bs:writeUInt16(id)
+  bs:writeUInt8(dType)
+  bs:writeUInt8(#title); bs:writeString(title)
+  bs:writeUInt8(#button1); bs:writeString(button1)
+  bs:writeUInt8(#button2); bs:writeString(button2)
+  bs:writeUInt32(#text); bs:writeString(text)
+  sendRPC(RPC.SHOW_DIALOG, true, bs, self[clientSlot].ip, self[clientSlot].port)
 end

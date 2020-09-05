@@ -158,6 +158,8 @@ function RPC_Receiver(clientSlot, PacketID, bitStream, IP, PORT)
       RPC_Send_Message(clientSlot, bitStream, IP, PORT)
     elseif PacketID == RPC.SEND_COMMAND then
       RPC_Send_Command(clientSlot, bitStream, IP, PORT)
+    elseif PacketID == RPC.DIALOG_RESPONSE then
+      RPC_DialogResponse(clientSlot, bitStream, IP, PORT)
     end
   end
 end

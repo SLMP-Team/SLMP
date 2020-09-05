@@ -32,3 +32,14 @@ function RPC_Send_Command(clientSlot, bitStream, IP, PORT)
     Clients:sendMessage(clientSlot, str, 0x939393FF)
   end
 end
+
+function RPC_DialogResponse(clientSlot, bitStream, IP, PORT)
+  local id = bitStream:readUInt16()
+  local button = bitStream:readUInt8()
+  local list = bitStream:readUInt8()
+  local text = bitStream:readUInt8()
+  text = bitStream:readString(text)
+  if Clients[clientSlot].lastDialog == id then
+    pcall(onDialogResponse, Clients:getIDBySlot(clientSlot), id, button, list, text)
+  end
+end

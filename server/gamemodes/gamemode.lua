@@ -31,11 +31,19 @@ end
 function onPlayerChatCommand(playerid, command)
   if command:find('help') then
     Players:sendMessage(playerid, 'Hello world!', 0xFFFFFFFF)
+    Players:showDialog(playerid, 1, 0, 'Добро пожаловать на сервер!', 'Спасибо, что играете на нашем сервере, мы очень это ценим!', 'Окей', '')
     return true
   end
   return false -- set TRUE to prevent "no command" message
 end
 
 function onPlayerUpdate(playerid)
+  return true
+end
+
+function onDialogResponse(playerid, id, button, list, text)
+  if id == 1 then
+    Players:sendMessage(playerid, ':)', 0xFFFFFFFF)
+  end
   return true
 end
