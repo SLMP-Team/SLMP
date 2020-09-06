@@ -1,7 +1,7 @@
 General =
 {
   Version = 1,
-  VersionS = '0.0.1-RC8',
+  VersionS = '0.0.1-RC9',
   Timer = os.time(),
   SendSyncTime = os.clock(),
   LastPingTime = os.time(),

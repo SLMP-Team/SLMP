@@ -22,6 +22,37 @@ encoding = require 'encoding'
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
 
+ffi.cdef[[
+  typedef char CHAR;
+  typedef CHAR *LPSTR;
+  LPSTR GetCommandLineA();
+]]
+
+function GetArguments()
+  local import = ffi.string(ffi.C.GetCommandLineA())
+  import = import:sub(11, #import)
+  import = import:match('^%s*(.+)%s*$')
+  local args = {}
+  for str in import:gmatch('[^%-]+') do
+    local name, data = str:match('^(%S+)%s*(.*)$')
+    table.insert(args, {name, data})
+  end
+  return args
+end
+
+local startMultiplayer = false
+local args = GetArguments()
+for i, v in pairs(args) do
+  if v[1] == 'multiplayer' then
+    startMultiplayer = true
+  end
+end
+
+if not startMultiplayer then
+  thisScript():unload()
+  return
+end
+
 gMenuPatch = true
 if memory.getuint32(0xC8D4C0, false) < 9 then
   -- if game isn`t loaded now we will make some patches
