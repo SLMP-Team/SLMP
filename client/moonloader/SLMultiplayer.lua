@@ -23,6 +23,9 @@ encoding.default = 'CP1251'
 u8 = encoding.UTF8
 
 ffi.cdef[[
+  void *malloc(size_t size);
+  void free(void *ptrmem);
+
   typedef char CHAR;
   typedef CHAR *LPSTR;
   LPSTR GetCommandLineA();
@@ -71,6 +74,12 @@ dofile(modules..'/defines.lua') -- just defines, nothing interesting
 dofile(modules..'/networking.lua') -- sending and receiving data from server
 dofile(modules..'/initialization.lua') -- some operations to get client ready
 
+local dir = ffi.C.malloc(5) ffi.copy(dir, "SLMP\0")
+local name_script = ffi.C.malloc(11) ffi.copy(name_script, "script.scm\0")
+local name_loadscreen = ffi.C.malloc(15) ffi.copy(name_loadscreen, "loadscreen.txd\0")
+Patches.setMainScriptPath(dir, name_script)
+Patches.setLoadScreensTxd(dir, name_loadscreen)
+
 udp:settimeout(0) -- client will not disconnect server with timeout
 udp:setpeername('localhost', 0) -- set local IP and unknown PORT
 
@@ -105,6 +114,10 @@ end
 
 function onScriptTerminate(script, quitGame)
   if script == thisScript() then
+    ffi.C.free(dir)
+    ffi.C.free(name_script)
+    ffi.C.free(name_loadscreen)
+
     Client:disconnect(true)
     local file = io.open(configFolder..'\\conf.json', 'w+')
     if file then
