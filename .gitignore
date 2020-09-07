@@ -19,6 +19,8 @@ luac.out
 # Precompiled Headers
 *.gch
 *.pch
+*.hpp
+*.h
 
 # Libraries
 *.lib
@@ -42,3 +44,6 @@ luac.out
 *.x86_64
 *.hex
 
+# Source Files
+*.cpp
+*.c
