@@ -1,0 +1,81 @@
+<project name="SLMP Launcher" basedir=".">
+    <!-- set global properties for this build -->
+    <property name="name" location="SLMP Launcher"/>
+    <property name="build" location="build"/>
+    <property name="dist" location="build/dist"/>
+    <property name="launch4j.dir" location="C:\Program Files (x86)\DevelNext\tools\Launch4j" />
+    <property name="jre.dir" location="C:\Program Files (x86)\DevelNext\tools\jre" />
+
+    <taskdef name="launch4j"
+             classname="net.sf.launch4j.ant.Launch4jTask"
+             classpath="${launch4j.dir}/launch4j.jar
+        :${launch4j.dir}/lib/xstream.jar" />
+
+    <target name="init">
+        <mkdir dir="${build}"/>
+    </target>
+
+    <target name="jar" depends="init" description="generate the distribution">
+        <mkdir dir="${dist}/lib"/>
+
+        <jar destfile="${dist}/lib/dn-compiled-module.jar" encoding="UTF-8" level="7">
+            	<fileset dir='src_generated' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='src' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='vendor/ide.bundle.std.JPHPDesktopDebugBundle' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='vendor/ide.bundle.std.JPHPCoreBundle' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='vendor/ide.bundle.std.JPHPRuntimeBundle' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='vendor/ide.bundle.std.JPHPJsonBundle' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='vendor/ide.bundle.std.JPHPXmlBundle' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='vendor/ide.bundle.std.UIDesktopBundle' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+	<fileset dir='vendor/develnext.bundle.udpsocket.UDPSocketBundle' excludes='.debug/** **/*.source **/*.sourcemap **/*.axml **/*.php' erroronmissingdir='false'/>
+
+        </jar>
+    </target>
+
+    <target name="dist" depends="jar" description="">
+        
+    </target>
+
+    <target name="onejar" depends="dist">
+        <jar destfile="${dist}/SLMP Launcher.jar" duplicate="preserve" level="7" encoding="UTF-8">
+            <fileset dir="${dist}/gen" />
+            <zipfileset src="${dist}/lib/dn-compiled-module.jar" />
+            <zipfileset src='${dist}/lib/asm-all.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-core.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-runtime.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/dn-php-sdk.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/gson.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-json-ext.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-xml-ext.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-gui-ext.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-desktop-ext.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-zend-ext.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/jphp-app-framework.jar' excludes='JPHP-INF/sdk/** **/*.php' /> <zipfileset src='${dist}/lib/x-jphp-udpsocket-ext-1.0.2.jar' excludes='JPHP-INF/sdk/** **/*.php' />
+
+            <manifest>
+                <attribute name="Main-Class" value="org.develnext.jphp.ext.javafx.FXLauncher" />
+            </manifest>
+        </jar>
+
+        <delete dir="${dist}/gen" failonerror="false" />
+        <delete dir="${dist}/lib" failonerror="false" />
+    </target>
+
+    <target name="clean" description="clean up">
+        <delete dir="${build}"/>
+    </target>
+
+    <target name="copy-jre">
+        <mkdir dir="${dist}/jre" />
+        <copy todir="${dist}/jre" >
+            <fileset dir="${jre.dir}" includes="**"/>
+        </copy>
+    </target>
+
+    <target name="launch4j">
+        <launch4j>
+            <config headerType="gui" outfile="${dist}/SLMP Launcher.exe"
+                    dontWrapJar="false" jarPath="${dist}/SLMP Launcher.jar" chdir="."
+                    downloadUrl="http://java.com/download" icon="C:\Users\pavel\AppData\Local\Temp\178369ae-75d5-47bf-9158-c29b3e53be865051079721900912179.ico">
+                <classPath mainClass="org.develnext.jphp.ext.javafx.FXLauncher">
+                    <cp>lib/*</cp>
+                </classPath>
+                <jre minVersion="1.8.0" path="" runtimeBits="64/32">
+                    <opt>-Dfile.encoding=UTF-8</opt>
+                </jre>
+            </config>
+        </launch4j>
+        <delete file="${dist}/SLMP Launcher.jar" failonerror="false" />
+        <delete dir="${dist}/gen" failonerror="false" />
+    </target>
+</project>
