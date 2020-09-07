@@ -1,3 +1,6 @@
+# Prerequisites
+*.d
+
 # Compiled Lua sources
 luac.out
 
@@ -6,21 +9,27 @@ luac.out
 *.zip
 *.tar.gz
 
-# Configuration Files
-*.cfg
-
-# Object files
+# Compiled Object files
+*.slo
+*.lo
 *.o
+*.obj
 *.os
 *.ko
-*.obj
 *.elf
 
 # Precompiled Headers
 *.gch
 *.pch
-*.hpp
-*.h
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
 
 # Libraries
 *.lib
@@ -36,6 +45,12 @@ luac.out
 *.so.*
 *.dylib
 
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
 # Executables
 *.exe
 *.out
@@ -43,7 +58,3 @@ luac.out
 *.i*86
 *.x86_64
 *.hex
-
-# Source Files
-*.cpp
-*.c
