@@ -105,3 +105,13 @@ Patches.workInPause = function()
   memory.fill(5499528, 144, 6)
   memory.fill(0x748063, 0x90, 5, true)
 end
+
+function Patches.setMainScriptPath(directory, name)
+  memory.setuint32(0x468EB5 + 1, tonumber(ffi.cast('uintptr_t', directory)), true)
+  memory.setuint32(0x468EC4 + 1, tonumber(ffi.cast('uintptr_t', name)), true)
+end
+
+function Patches.setLoadScreensTxd(directory, name)
+  memory.setuint32(0x5900B6 + 1, tonumber(ffi.cast('uintptr_t', directory)), true)
+  memory.setuint32(0x5900CC + 1, tonumber(ffi.cast('uintptr_t', name)), true)
+end
