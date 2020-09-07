@@ -58,3 +58,24 @@ luac.out
 *.i*86
 *.x86_64
 *.hex
+
+# DN IgnoreList
+/launcher/.dn/cache
+/launcher/.dn/ide.lock
+/launcher/.dn/tmp
+/launcher/.dn/index.json
+/launcher/.dn/backup
+
+/launcher/vendor
+/launcher/src_generated
+/launcher/src/JPHP-INF
+/launcher/src/.debug
+/launcher/build
+/launcher/build.xml
+/launcher/build.gradle
+/launcher/settings.gradle
+
+*.log
+*.pid
+*.tmp
+*.sourcemap
