@@ -74,7 +74,7 @@ dofile(modules..'/defines.lua') -- just defines, nothing interesting
 dofile(modules..'/networking.lua') -- sending and receiving data from server
 dofile(modules..'/initialization.lua') -- some operations to get client ready
 
-local dir = ffi.C.malloc(5) ffi.copy(dir, "SLMP\0")
+local dir = ffi.C.malloc(5) ffi.copy(dir, "moonloader\\SLModules\\resources\\sa-files\0")
 local name_script = ffi.C.malloc(11) ffi.copy(name_script, "script.scm\0")
 local name_loadscreen = ffi.C.malloc(15) ffi.copy(name_loadscreen, "loadscreen.txd\0")
 Patches.setMainScriptPath(dir, name_script)
