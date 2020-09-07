@@ -4,7 +4,7 @@ OpenSource GTA: San Andreas Multiplayer based on Lua
 * Download client for Windows from Releases
 * Install [MoonLoader](https://www.blast.hk/moonloader) from BlastHack WebSite
 * Copy & Paste all data from archive to GTA Directory
-* Launch GTA: San Andreas via __gta_sa.exe__ file
+* Launch GTA: San Andreas via __slmp.exe__ file
 ## Installing Server
 * Choose server's version: Linux / Windows
 * Download archive with server from Releases
