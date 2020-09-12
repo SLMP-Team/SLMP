@@ -138,21 +138,23 @@ function main() -- moonloader script header function
   end
 
   while true do
-		wait(0)	
-		dRPC.largeImageKey = 'game'
+    wait(0)
+
+    dRPC.largeImageKey = 'game'
 		if Player.GameState == GAMESTATE.CONNECTED then
-			dRPC.largeImageText = Config.serverAddress
-			dRPC.details = 'Playing ' .. ClientData.sName
-			dRPC.state = ClientData.sWebsite .. ' (' .. ClientData.sPlayers[1] .. ' of ' .. ClientData.sPlayers[2] .. ')'
-			dRPC.partySize = ClientData.sPlayers[1]
-			dRPC.partyMax = ClientData.sPlayers[2]
-			dRPC.partyId = Config.serverAddress
-		else
-			dRPC.largeImageText = 'In Menu'
-			dRPC.details = 'Idle'
-			dRPC.state = ''
-		end
-		DiscordRPC.Discord_UpdatePresence(dRPC)
+      dRPC.largeImageText = Config.serverAddress
+      dRPC.details = 'Playing ' .. ClientData.sName
+      dRPC.state = ClientData.sWebsite .. ' (' .. ClientData.sPlayers[1] .. ' of ' .. ClientData.sPlayers[2] .. ')'
+      dRPC.partySize = ClientData.sPlayers[1]
+      dRPC.partyMax = ClientData.sPlayers[2]
+      dRPC.partyId = Config.serverAddress
+    else
+      dRPC.largeImageText = 'In Menu'
+      dRPC.details = 'Idle'
+      dRPC.state = ''
+    end
+    DiscordRPC.Discord_UpdatePresence(dRPC)
+
   end
 end
 
