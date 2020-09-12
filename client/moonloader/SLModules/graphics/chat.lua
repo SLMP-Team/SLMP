@@ -43,7 +43,7 @@ function(self)
         imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), shadowText)
 
         imgui.SetCursorPos(imgui.ImVec2(tpos.x, tpos.y))
-        imgui.textRGB(timetag .. Graphics.ChatSettings.tChatMessages[i].text)
+        imgui.textRGB(timetag .. Graphics.ChatSettings.tChatMessages[i].text:gsub('%%%%', '%%'))
 			end
 		end
   end

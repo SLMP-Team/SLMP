@@ -60,19 +60,22 @@ function sendPacket(PacketID, PacketPriority, PacketData, pTry)
   pTry = type(pTry) == 'number' and pTry or 0
   if type(PacketData) ~= 'table' then return end
   local str = preparePacket(false, PacketID, PacketPriority, PacketData:export(), pTry)
-  udp:send(str)
+  --udp:send(str)
+  Socket:send(str)
 end
 
 function sendRPC(PacketID, PacketPriority, PacketData, pTry)
   pTry = type(pTry) == 'number' and pTry or 0
   if type(PacketData) ~= 'table' then return end
   local str = preparePacket(true, PacketID, PacketPriority, PacketData:export(), pTry)
-  udp:send(str)
+  --udp:send(str)
+  Socket:send(str)
 end
 
 function NetworkLoop()
   while true do
-    local message = udp:receive()
+    --local message = udp:receive()
+    local message = Socket:receive()
     if message then -- proccess only if have data
       -- structure of data should be: SLMP[P/R][ID][1/0][DATA]
       -- if PRIORITY equals 1 first UINT_16 in DATA will be unique ID
@@ -109,6 +112,10 @@ function NetworkLoop()
     and os.time() - General.ConnectingTime > 10 then
       Player.GameState = GAMESTATE.DISCONNECTED
       Graphics.tClientPopupText = 'Unable to Connect to Server'
+      Game:addChatMessage('The server didn`t respond, retrying...', 0xCFCFCFFF)
+      Game:addChatMessage('Connecting to ' .. Config.serverAddress .. '...', 0xCFCFCFFF)
+      wait(5000)
+      Client:connect(Config.playerName)
     end
     if (os.clock() - General.SendSyncTime) * 1000
     > Server.OnFootRate and not isGamePaused() then

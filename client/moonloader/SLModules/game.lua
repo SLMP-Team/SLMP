@@ -103,12 +103,12 @@ function Game:proccessCommand(command)
     Graphics.ChatSettings.tChatFontSize = num
     Graphics.ChatSettings.tChatFontLoaded = false
     return true
-  elseif command == 'disconnect' then
+  --[[elseif command == 'disconnect' then
     Client:disconnect(true)
     Graphics.wChat[0] = false
     Graphics.ChatSettings.tChatMessages = {}
     Graphics.wClient[0] = true
-    setCharCoordinates(PLAYER_PED, 0.0, 0.0, 3.0)
+    setCharCoordinates(PLAYER_PED, 0.0, 0.0, 3.0)]]
   elseif command == 'q' or command == 'quit' then
     os.execute('TASKKILL /IM gta_sa.exe')
     os.execute('TASKKILL /IM gtasa.exe')

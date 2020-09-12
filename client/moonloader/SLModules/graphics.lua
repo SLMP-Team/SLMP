@@ -12,7 +12,7 @@ Graphics =
     tSideBarPos = Game:getResolution()[1],
     tAddress = imgui.new.char[128]()
   },
-  wChat = imgui.new.bool(false),
+  wChat = imgui.new.bool(true),
   ChatSettings =
   {
     tChatLines = 10,
@@ -60,6 +60,6 @@ imgui.OnInitialize(function()
   imgui.InvalidateFontsTexture()
 end)
 
-dofile(modules..'/graphics/chat.lua')
-dofile(modules..'/graphics/client.lua')
-dofile(modules..'/graphics/dialog.lua')
+require('graphics.chat')
+-- require('graphics.client')
+require('graphics.dialog')

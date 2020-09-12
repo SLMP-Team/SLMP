@@ -66,8 +66,9 @@ function(self)
   if imgui.Button('CONNECT') then
     local ip, port = ffi.string(Graphics.ClientSettings.tAddress):match('^(%S+):(%d+)$')
     if ip and port and Player.GameState == GAMESTATE.DISCONNECTED then
-      udp:settimeout(0)
-      udp:setpeername(ip, tonumber(port))
+      --[[udp:settimeout(0)
+      udp:setpeername(ip, tonumber(port))]]
+      Socket:init(ip, port)
       local bs = BitStream:new()
       sendPacket(PACKET.PING_SERVER, false, bs)
       Graphics.tClientPopupText = 'Connecting to server...'
@@ -123,8 +124,9 @@ function(self)
     if ip and port then
       ClientData.sName = 'Pending...'
       ClientData.sRequestTime = os.clock()
-      udp:settimeout(0)
-      udp:setpeername(ip, port)
+      --udp:settimeout(0)
+      --udp:setpeername(ip, port)
+      Socket:init(ip, port)
       local bs = BitStream:new()
       sendPacket(PACKET.PING_SERVER, false, bs)
     end

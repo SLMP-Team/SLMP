@@ -10,17 +10,27 @@ function Packet_Connection_Success(bitStream)
   Graphics.wClient[0] = false
   Graphics.wChat[0] = true
   Graphics.tClientPopupText = 'Connected to server!'
-  Game:addChatMessage('Connecting to server ' .. ClientData.sName .. '...', 0x939393FF)
-  Game:addChatMessage('Conntected, welcome to server ' .. ClientData.sName .. '!', 0x939393FF)
+  Game:addChatMessage('Conntected to ' .. Config.serverAddress .. '!', 0xCFCFCFFF)
+  setCharProofs(PLAYER_PED, false, false, false, false, false)
+  setPlayerControl(PLAYER_HANDLE, true)
+  setCharVisible(PLAYER_PED, true)
+  local x, y, z = getCharCoordinates(PLAYER_PED)
+  setFixedCameraPosition(x, y, z, 0.0, 0.0, 0.0)
+  restoreCamera()
+  setCameraBehindPlayer()
+  displayHud(true); displayRadar(true)
 end
 
 function Packet_Connection_Fail(bitStream)
   Player.GameState = GAMESTATE.DISCONNECTED
-  Graphics.tClientPopupText = 'Unknown Connection Error'
+  Graphics.tClientPopupText = 'Unknown Connection Error, please try connect later.'
   local error = bitStream:readUInt8()
-  if error == 1 then Graphics.tClientPopupText = 'No Free Slots Available'
-  elseif error == 2 then Graphics.tClientPopupText = 'Incorrect User Name'
-  elseif error == 4 then Graphics.tClientPopupText = 'User Name Already Taken' end
+  if error == 1 then Graphics.tClientPopupText = 'The server is full, please try connect later.'
+  elseif error == 2 then Graphics.tClientPopupText = 'Incorrect nickname, you allowed to use only a-z, A-Z and 0-9 symbols.'
+  elseif error == 3 then Graphics.tClientPopupText = 'Incorrect client version, please check server`s version.'
+  elseif error == 4 then Graphics.tClientPopupText = 'User nickname already taken by someone, try to change your nickname.' end
+  Game:addChatMessage(Graphics.tClientPopupText, 0x8AFF80FF)
+  Game:addChatMessage('Change invalid data and try to connect again.', 0x8AFF80FF)
 end
 
 function Packet_Update_Stream(bitStream)

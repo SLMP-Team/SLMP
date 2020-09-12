@@ -6,12 +6,8 @@ function Client:connect(name)
   General.ConnectingTime = os.time()
   Player.GameState = GAMESTATE.CONNECTING
   name = type(name) == 'string' and name or ''
-  --[[ip = type(ip) == 'string' and ip or ''
-  port = type(port) == 'number' and port or 0
-  udp:settimeout(0)
-  udp:setpeername(ip, port)]]
   local bitStream = BitStream:new()
-  bitStream:writeUInt8(name:len())
+  bitStream:writeUInt8(#name)
   bitStream:writeString(name)
   bitStream:writeInt32(sVolumeToken[0])
   bitStream:writeUInt16(General.Version)
@@ -23,8 +19,7 @@ function Client:updatePingAndScore()
   end
   if os.time() - General.LastPingTime > 30 then
     Client:disconnect(false, 1)
-    Game:addChatMessage('Connection to server lost', 0x939393FF)
-    Game:addChatMessage('Use /disconnect to return to menu', 0x939393FF)
+    Game:addChatMessage('Connection to server lost.', 0xCFCFCFFF)
     return
   end
   local bitStream = BitStream:new()
@@ -59,8 +54,9 @@ function Client:disconnect(clearCache, reason)
   bs:writeUInt8(reason)
   sendPacket(PACKET.DISCONNECT_NOTIFICATION, true, bs)
   Player.GameState = GAMESTATE.DISCONNECTED
-  udp:settimeout(0)
-  udp:setpeername('localhost', 0)
+  --[[udp:settimeout(0)
+  udp:setpeername('localhost', 0)]]
+  Socket:close()
 end
 function Client:sendDialogResponse(id, button, list, text)
   local bs = BitStream:new()

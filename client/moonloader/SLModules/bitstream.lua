@@ -212,3 +212,41 @@ function BitStream:new()
   end
   return bitStream
 end
+
+Socket = {Handle=nil,Connection=false}
+function Socket:isConnected()
+  return self.Handle ~= nil
+end
+function Socket:init(host, port)
+  host = type(host) == 'string' and host or ''
+  port = (type(port) == 'string' or type(port) == 'number') and port or 0
+  host = host:match('^%s*(.+)%s*$')
+  port = tonumber(port)
+  if Socket:isConnected() then
+    self.Handle:close()
+  end
+  self.Handle = socket.udp()
+  self.Handle:settimeout(0)
+  self.Handle:setpeername(host, port)
+  self.Connection = true
+end
+function Socket:close()
+  if not Socket:isConnected() then
+    return
+  end
+  self.Handle:close()
+  self.Handle = nil
+  self.Connection = false
+end
+function Socket:send(message)
+  if not Socket:isConnected() then
+    return
+  end
+  self.Handle:send(message)
+end
+function Socket:receive()
+  if not Socket:isConnected() then
+    return nil
+  end
+  return self.Handle:receive()
+end
