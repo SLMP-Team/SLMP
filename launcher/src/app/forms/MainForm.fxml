@@ -127,18 +127,24 @@
         <Font name="System Regular" size="10"/>
       </font>
     </Button>
-    <Data cursor="DEFAULT" enabled="1" id="data-buttonAlt" visible="1"/>
+    <Data cursor="DEFAULT" enabled="1" id="data-buttonAlt" tooltipText="Добавить сервер в список" visible="1"/>
     <Button alignment="CENTER" contentDisplay="LEFT" ellipsisString="..." focusTraversable="true" graphicTextGap="4" id="button3" layoutX="337" layoutY="5" prefHeight="23" prefWidth="24" styleClass="button " text="-" textAlignment="CENTER" underline="false" wrapText="false">
       <font>
         <Font name="System Regular" size="10"/>
       </font>
     </Button>
-    <Data cursor="DEFAULT" enabled="1" id="data-button3" visible="1"/>
+    <Data cursor="DEFAULT" enabled="1" id="data-button3" tooltipText="Удалить сервер из списка" visible="1"/>
     <Button alignment="CENTER" contentDisplay="LEFT" ellipsisString="..." focusTraversable="true" graphicTextGap="4" id="button4" layoutX="363" layoutY="5" prefHeight="23" prefWidth="24" styleClass="button " text="U" textAlignment="CENTER" underline="false" wrapText="false">
       <font>
         <Font name="System Regular" size="10"/>
       </font>
     </Button>
-    <Data cursor="DEFAULT" enabled="1" id="data-button4" visible="1"/>
+    <Data cursor="DEFAULT" enabled="1" id="data-button4" tooltipText="Обновить информацию о сервере" visible="1"/>
+    <TextArea editable="false" focusTraversable="true" id="textArea" layoutX="301" layoutY="296" prefColumnCount="40" prefHeight="290" prefWidth="300" promptText="" styleClass="text-input text-area " text="debug window" wrapText="true">
+      <font>
+        <Font name="System Regular" size="12"/>
+      </font>
+    </TextArea>
+    <Data cursor="DEFAULT" enabled="" id="data-textArea" visible=""/>
   </children>
 </AnchorPane>

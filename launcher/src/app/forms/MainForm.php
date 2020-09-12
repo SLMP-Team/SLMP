@@ -35,6 +35,7 @@ class MainForm extends AbstractForm
         ];
         array_push($servers, $server);
         $this->module('MainModule')->loadMyServers();
+        $this->table->selectedIndex = $this->table->items->count() - 1;
         $data = Regex::split(':', $this->editAlt->text);
         $this->module('MainModule')->pingServer($data[0], $data[1]);
     }
@@ -66,7 +67,7 @@ class MainForm extends AbstractForm
             UXDialog::showAndWait('Select any server!', 'ERROR');
             return;
         }
-        $data = Regex::split(':', $this->table->focusedItem['address']);
+        $data = Regex::split(':', $this->table->selectedItem['address']);
         $this->table->selectedIndex = -1;
         if (!fs::exists('gta_sa.exe'))
         {
@@ -74,7 +75,6 @@ class MainForm extends AbstractForm
             return;
         }
         execute('gta_sa.exe -multiplayer -n ' . $nickname . ' -h ' . $data[0] . ' -p ' . $data[1]);
-        $this->iconified = true;
     }
 
     /**
@@ -82,7 +82,47 @@ class MainForm extends AbstractForm
      */
     function doClose(UXWindowEvent $e = null)
     {    
+        global $servers, $launcher;
+        $launcher['name'] = $this->edit->text;
+        Json::toFile('slmp_servers.json', $servers);
+        Json::toFile('slmp_settings.json', $launcher);
+    }
+
+    /**
+     * @event table.click-Left 
+     */
+    function doTableClickLeft(UXMouseEvent $e = null)
+    {    
+        if ($this->table->selectedIndex == -1) return;
+        $parts =  Regex::split(':', $this->table->selectedItem['address']);
+        $this->module('MainModule')->pingServer($parts[0], $parts[1]);
+    }
+
+    /**
+     * @event button4.action 
+     */
+    function doButton4Action(UXEvent $e = null)
+    {    
+        if ($this->table->selectedIndex == -1) return;
+        $parts =  Regex::split(':', $this->table->selectedItem['address']);
+        $this->module('MainModule')->pingServer($parts[0], $parts[1]);
+    }
+
+    /**
+     * @event button3.action 
+     */
+    function doButton3Action(UXEvent $e = null)
+    {    
         global $servers;
-        Json::toFile('slmp-settings.json', $servers);
+        if ($this->table->selectedIndex == -1) return;
+        foreach ($servers as $k => $v)
+        {
+            if ($v['address'] == $this->table->selectedItem['address'])
+            {
+                unset($servers[$k]);
+                break;
+            }
+        }
+        $this->table->items->removeByIndex($this->table->selectedIndex);
     }
 }
