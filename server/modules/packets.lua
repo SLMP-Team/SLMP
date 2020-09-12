@@ -84,6 +84,22 @@ function Packet_OnFoot_Sync(clientSlot, bitStream, IP, PORT)
   pcall(onPlayerUpdate, Clients:getIDBySlot(clientSlot))
 end
 
+function Packet_Query(IP, PORT)
+	local query = 'SLMP'
+	query = query .. '//|' .. Clients:count()
+	query = query .. '//|' .. Config.Slots
+	query = query .. '//|' .. Config.Hostname
+	query = query .. '//|' .. General.VersionS
+	query = query .. '//|' .. Config.Language
+	query = query .. '//|' .. Config.Website
+	for i = 1, Clients:count() do
+		query = query .. '//|' .. Clients[i].id
+		query = query .. '//|' .. Clients[i].name
+		query = query .. '//|' .. Clients[i].ping
+	end
+	udp:sendto(query, IP, PORT)
+end
+
 function Packet_Ping_Server(bitStream, IP, PORT)
   local bs = BitStream:new()
   bs:writeUInt16(Clients:count())

@@ -1,7 +1,7 @@
 General =
 {
-  Version = 1,
-  VersionS = '0.0.1-RC9',
+  Version = 2,
+  VersionS = '0.0.1-RC-X',
   Timer = os.time(),
   StreamUpdate = os.clock(),
   OnFootUpdate = os.clock()

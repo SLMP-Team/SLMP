@@ -82,7 +82,11 @@ function MainLoop()
     if message then -- proccess only if have data
       -- structure of data should be: SLMP[P/R][ID][1/0][DATA]
       -- if PRIORITY equals 1 first UINT_16 in DATA will be unique ID
-      if message:sub(1,4) == 'SLMP' then
+      --print(message)
+			if message:sub(1,4) == 'SLMP' then
+				if message == 'SLMPQUERY' then
+					Packet_Query(ip, port)
+				end
         local dataID = tonumber(message:sub(6,8))
         local dataPriority = tonumber(message:sub(9,9))
         local dataMessage = message:sub(10,#message)

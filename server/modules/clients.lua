@@ -222,15 +222,15 @@ function Clients:setInterior(clientSlot, interior)
 end
 function Clients:sendMessage(slot, text, color)
   local bs = BitStream:new()
-  bs:writeUInt8(text:len())
-  bs:writeString(text)
+  bs:writeUInt8(#text:gsub('%%', '%%%%')) -- imgui formatting crash fix
+  bs:writeString(text:gsub('%%', '%%%%')) -- imgui formatting crash fix
   bs:writeUInt32(color)
   sendRPC(RPC.SEND_MESSAGE, true, bs, self[slot].ip, self[slot].port)
 end
 function Clients:sendMessageAll(text, color)
   local bs = BitStream:new()
-  bs:writeUInt8(text:len())
-  bs:writeString(text)
+  bs:writeUInt8(#text:gsub('%%', '%%%%')) -- imgui formatting crash fix
+  bs:writeString(text:gsub('%%', '%%%%')) -- imgui formatting crash fix
   bs:writeUInt32(color)
   for i = 1, self:count() do
     sendRPC(RPC.SEND_MESSAGE, true, bs, self[i].ip, self[i].port)
@@ -240,8 +240,8 @@ function Clients:setChatBubble(clientSlot, text, time, color, dist)
   local bs = BitStream:new()
   local clientID = self:getIDBySlot(clientSlot)
   bs:writeUInt16(clientID)
-  bs:writeUInt8(#text)
-  bs:writeString(text)
+  bs:writeUInt8(#text:gsub('%%', '%%%%')) -- imgui formatting crash fix
+  bs:writeString(text:gsub('%%', '%%%%')) -- imgui formatting crash fix
   bs:writeUInt32(color)
   bs:writeFloat(dist)
   bs:writeUInt16(time)
@@ -256,9 +256,9 @@ function Clients:showDialog(clientSlot, id, dType, title, text, button1, button2
   local bs = BitStream:new()
   bs:writeUInt16(id)
   bs:writeUInt8(dType)
-  bs:writeUInt8(#title); bs:writeString(title)
-  bs:writeUInt8(#button1); bs:writeString(button1)
-  bs:writeUInt8(#button2); bs:writeString(button2)
-  bs:writeUInt32(#text); bs:writeString(text)
+  bs:writeUInt8(#title:gsub('%%', '%%%%')); bs:writeString(title:gsub('%%', '%%%%')) -- imgui formatting crash fix
+  bs:writeUInt8(#button1:gsub('%%', '%%%%')); bs:writeString(button1:gsub('%%', '%%%%')) -- imgui formatting crash fix
+  bs:writeUInt8(#button2:gsub('%%', '%%%%')); bs:writeString(button2:gsub('%%', '%%%%')) -- imgui formatting crash fix
+  bs:writeUInt32(#text:gsub('%%', '%%%%')); bs:writeString(text:gsub('%%', '%%%%')) -- imgui formatting crash fix
   sendRPC(RPC.SHOW_DIALOG, true, bs, self[clientSlot].ip, self[clientSlot].port)
 end
