@@ -138,12 +138,8 @@ function main() -- moonloader script header function
   end
 
   while true do
-    wait(0)
-
-    --local x, y, z = getCharCoordinates(PLAYER_PED)
-    --Game:addChatMessage(tostring(x..','..y..','..z), 0xFFFFFFFF)
-
-    dRPC.largeImageKey = 'game'
+		wait(0)	
+		dRPC.largeImageKey = 'game'
 		if Player.GameState == GAMESTATE.CONNECTED then
 			dRPC.largeImageText = Config.serverAddress
 			dRPC.details = 'Playing ' .. ClientData.sName
@@ -156,9 +152,7 @@ function main() -- moonloader script header function
 			dRPC.details = 'Idle'
 			dRPC.state = ''
 		end
-
-    DiscordRPC.Discord_UpdatePresence(dRPC)
-
+		DiscordRPC.Discord_UpdatePresence(dRPC)
   end
 end
 
