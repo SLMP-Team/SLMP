@@ -1,6 +1,6 @@
 @ECHO OFF
 title SL:MP Server
-cd /D %~dp0\luajit\
+cd /D %~dp0\core\
 cls
-luajit ..\server.lua
+luajit lua\svrcore\init.lua
 pause
