@@ -54,6 +54,23 @@ function patches.apply() -- GTA:SA in-game patches
   memory.fill(0x53C1C1, 0x90, 5, true)
   memory.fill(0x434272, 0x90, 5, true)
   --memory.fill(0x561AF0, 0x90, 7, true) -- antipause
+
+  -- Disable vehicle gifts
+  memory.setuint8(0x6D170B, 0xE9, true)
+  memory.setuint32(0x6D170C, 0x6D17D5 - 0x6D170B - 5, true)
+
+  -- Disable spawn 537 Train
+  memory.setuint8(0x8D477C, 0x00, true)
+  memory.setuint8(0x8D477D, 0x00, true)
+
+  -- Disable spawn with cigars and bottles
+  memory.fill(0x4217F4, 0x90, 21, true)
+  memory.fill(0x4218D8, 0x90, 17, true)
+  memory.fill(0x5F80C0, 0x90, 10, true)
+  memory.fill(0x5FBA47, 0x90, 10, true)
+  
+  -- Disable cinematic camera for train
+  memory.setuint8(0x52A535, 0, true)
 end
 
 function patches.antipause()
