@@ -9,8 +9,8 @@ function console_log(...)
   for i, v in ipairs({select(1, ...)}) do print(v) end
 end
 
-console_log("======================================", "Simple Lua Multiplayer Server Started", "======================================\n", "Contributors: Pavel Akulichev & Vadim Vinogradov",
-"License: Apache License, Version 2.0", "GitHub Repository: https://github.com/SLMP-Team/SLMP", "Special Thanks: FYP, imring, Akionka and other testers\n")
+console_log("======================================", "Simple Lua Multiplayer Server Started", "======================================\n", "Contributors: Pavel Akulichev & Vadim Vinogradov & Vladimir Lis",
+"License: Apache License, Version 2.0", "GitHub Repository: https://github.com/SLMP-Team/SLMP", "Special Thanks: FYP, imring and other testers\n")
 
 WORKING_DIRECTORY = "../" -- move to server directory [../CORE]
 -- in CORE directory we have to collect ONLY SL:MP CORE FILES
