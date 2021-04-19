@@ -146,7 +146,7 @@ function main()
   require("coremp.patches").apply()
   require("coremp.patches").antipause()
   chat_pool:add(0xC9C9C9FF, "Simple MP 1.0.0 started and initialized.")
-  chat_pool:add(0xC9C9C9FF, "Authors: Pavel Akulichev & Vadim Vinogradov.")
+  chat_pool:add(0xC9C9C9FF, "Authors: Pavel Akulichev & Vadim Vinogradov & Vladimir Lis.")
   wait(1000); connect_to_server()
   lua_thread.create(function()
     -- delete not-slmp vehicles
