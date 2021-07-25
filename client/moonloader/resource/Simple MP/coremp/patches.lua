@@ -71,6 +71,9 @@ function patches.apply() -- GTA:SA in-game patches
   
   -- Disable cinematic camera for train
   memory.setuint8(0x52A535, 0, true)
+
+  -- patch resolution
+  memory.fill(0x745BC9, 0x90, 2, true)
 end
 
 function patches.antipause()
